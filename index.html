@@ -18,8 +18,10 @@
     <span class="logo-bracket">}</span>
   </div>
   <nav>
-    <button class="nav-btn active" data-section="arrays">Arrays & Lists</button>
-    <button class="nav-btn" data-section="stacks">Stacks & Queues</button>
+    <button class="nav-btn active" data-section="arrays">Array</button>
+    <button class="nav-btn" data-section="linkedlist">Linked List</button>
+    <button class="nav-btn" data-section="stacks">Stack</button>
+    <button class="nav-btn" data-section="queues">Queue</button>
     <button class="nav-btn" data-section="trees">Binary Search Tree</button>
   </nav>
   <div class="header-tag">Python · Visual · Interactive</div>
@@ -27,48 +29,62 @@
 
 <main>
 
-  <!-- ═══════════════════════════════ ARRAYS & LINKED LISTS ═══════════════════════════════ -->
+  <!-- ═══════════════ ARRAY ═══════════════ -->
   <section id="arrays" class="section active">
     <div class="section-hero">
-      <h1>Arrays <span class="dim">&</span> Linked Lists</h1>
+      <h1>Array</h1>
       <p class="subtitle">Click <kbd>Step →</kbd> to walk through each line of code and watch the structure evolve.</p>
     </div>
-
     <div class="viz-layout">
-      <!-- Code Panel -->
       <div class="code-panel">
         <div class="panel-label">Python Code</div>
         <pre class="code-block" id="array-code"></pre>
       </div>
-
-      <!-- Diagram Panel -->
       <div class="diagram-panel">
         <div class="panel-label">Visualization</div>
         <div class="diagram-area" id="array-diagram"></div>
         <div class="callout" id="array-callout">Press <strong>Step →</strong> to begin</div>
       </div>
     </div>
-
     <div class="controls">
       <button class="ctrl-btn secondary" id="array-reset">↺ Reset</button>
       <button class="ctrl-btn" id="array-step">Step →</button>
       <button class="ctrl-btn secondary" id="array-auto">▶ Auto</button>
       <div class="step-counter">Step <span id="array-step-num">0</span> / <span id="array-step-total">0</span></div>
     </div>
+  </section>
 
-    <div class="tabs-row">
-      <button class="tab-btn active" data-tab="array-tab">Array</button>
-      <button class="tab-btn" data-tab="linked-tab">Linked List</button>
+  <!-- ═══════════════ LINKED LIST ═══════════════ -->
+  <section id="linkedlist" class="section">
+    <div class="section-hero">
+      <h1>Linked List</h1>
+      <p class="subtitle">See how nodes are chained together with <strong>next</strong> pointers — step through each append operation.</p>
+    </div>
+    <div class="viz-layout">
+      <div class="code-panel">
+        <div class="panel-label">Python Code</div>
+        <pre class="code-block" id="linked-code"></pre>
+      </div>
+      <div class="diagram-panel">
+        <div class="panel-label">Visualization</div>
+        <div class="diagram-area" id="linked-diagram"></div>
+        <div class="callout" id="linked-callout">Press <strong>Step →</strong> to begin</div>
+      </div>
+    </div>
+    <div class="controls">
+      <button class="ctrl-btn secondary" id="linked-reset">↺ Reset</button>
+      <button class="ctrl-btn" id="linked-step">Step →</button>
+      <button class="ctrl-btn secondary" id="linked-auto">▶ Auto</button>
+      <div class="step-counter">Step <span id="linked-step-num">0</span> / <span id="linked-step-total">0</span></div>
     </div>
   </section>
 
-  <!-- ═══════════════════════════════ STACKS & QUEUES ═══════════════════════════════ -->
+  <!-- ═══════════════ STACK ═══════════════ -->
   <section id="stacks" class="section">
     <div class="section-hero">
-      <h1>Stacks <span class="dim">&</span> Queues</h1>
-      <p class="subtitle">See LIFO vs FIFO in action — step through push/pop and enqueue/dequeue operations.</p>
+      <h1>Stack</h1>
+      <p class="subtitle">LIFO — Last In, First Out. Step through push and pop operations.</p>
     </div>
-
     <div class="viz-layout">
       <div class="code-panel">
         <div class="panel-label">Python Code</div>
@@ -80,27 +96,45 @@
         <div class="callout" id="stack-callout">Press <strong>Step →</strong> to begin</div>
       </div>
     </div>
-
     <div class="controls">
       <button class="ctrl-btn secondary" id="stack-reset">↺ Reset</button>
       <button class="ctrl-btn" id="stack-step">Step →</button>
       <button class="ctrl-btn secondary" id="stack-auto">▶ Auto</button>
       <div class="step-counter">Step <span id="stack-step-num">0</span> / <span id="stack-step-total">0</span></div>
     </div>
+  </section>
 
-    <div class="tabs-row">
-      <button class="tab-btn active" data-tab="stack-tab">Stack</button>
-      <button class="tab-btn" data-tab="queue-tab">Queue</button>
+  <!-- ═══════════════ QUEUE ═══════════════ -->
+  <section id="queues" class="section">
+    <div class="section-hero">
+      <h1>Queue</h1>
+      <p class="subtitle">FIFO — First In, First Out. Step through enqueue and dequeue operations.</p>
+    </div>
+    <div class="viz-layout">
+      <div class="code-panel">
+        <div class="panel-label">Python Code</div>
+        <pre class="code-block" id="queue-code"></pre>
+      </div>
+      <div class="diagram-panel">
+        <div class="panel-label">Visualization</div>
+        <div class="diagram-area" id="queue-diagram"></div>
+        <div class="callout" id="queue-callout">Press <strong>Step →</strong> to begin</div>
+      </div>
+    </div>
+    <div class="controls">
+      <button class="ctrl-btn secondary" id="queue-reset">↺ Reset</button>
+      <button class="ctrl-btn" id="queue-step">Step →</button>
+      <button class="ctrl-btn secondary" id="queue-auto">▶ Auto</button>
+      <div class="step-counter">Step <span id="queue-step-num">0</span> / <span id="queue-step-total">0</span></div>
     </div>
   </section>
 
-  <!-- ═══════════════════════════════ BINARY SEARCH TREE ═══════════════════════════════ -->
+  <!-- ═══════════════ BST ═══════════════ -->
   <section id="trees" class="section">
     <div class="section-hero">
       <h1>Binary Search Tree</h1>
       <p class="subtitle">Array-based BST using index pointers — step through each insertion and watch the tree and array table update live.</p>
     </div>
-
     <div class="viz-layout">
       <div class="code-panel">
         <div class="panel-label">Python Code</div>
@@ -114,7 +148,6 @@
         <div class="callout" id="tree-callout">Press <strong>Step →</strong> to begin</div>
       </div>
     </div>
-
     <div class="controls">
       <button class="ctrl-btn secondary" id="tree-reset">↺ Reset</button>
       <button class="ctrl-btn" id="tree-step">Step →</button>

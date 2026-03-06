@@ -98,29 +98,82 @@ function makeController(stepBtn, resetBtn, autoBtn, stepNumEl, stepTotalEl, step
 
 
 // ══════════════════════════════════════════════════════════════
-//  ARRAYS & LINKED LISTS
+//  ARRAY
 // ══════════════════════════════════════════════════════════════
 const arrayCode = [
-  "# Create an array (list in Python)",
   "arr = []",
   "",
-  "# Append elements",
-  "arr.append(10)   # arr = [10]",
-  "arr.append(20)   # arr = [10, 20]",
-  "arr.append(30)   # arr = [10, 20, 30]",
-  "arr.append(40)   # arr = [10, 20, 30, 40]",
+  "arr.append(10)",
+  "arr.append(20)",
+  "arr.append(30)",
+  "arr.append(40)",
   "",
-  "# Access by index",
-  "x = arr[0]       # x = 10",
-  "y = arr[2]       # y = 30",
+  "x = arr[0]",
+  "y = arr[2]",
   "",
-  "# Remove last element",
-  "arr.pop()        # arr = [10, 20, 30]",
+  "arr.pop()",
   "",
-  "# Insert at position",
-  "arr.insert(1, 99) # arr = [10, 99, 20, 30]",
+  "arr.insert(1, 99)",
 ];
 
+const arrDiagramEl = document.getElementById('array-diagram');
+const arrCalloutEl = document.getElementById('array-callout');
+
+function renderArrayDiagram(arr, highlightIdx = -1) {
+  arrDiagramEl.innerHTML = '';
+  if (arr.length === 0) {
+    arrDiagramEl.innerHTML = '<span style="color:var(--text-dim);font-family:var(--mono);font-size:.8rem">[ empty ]</span>';
+    return;
+  }
+  const row = document.createElement('div');
+  row.style.cssText = 'display:flex;gap:.5rem;flex-wrap:wrap;justify-content:center;';
+  arr.forEach((val, i) => {
+    const box = document.createElement('div');
+    box.className = 'arr-box';
+    box.innerHTML = `<div class="arr-cell ${i===highlightIdx?'highlight':''}">${val}</div><div class="arr-idx">[${i}]</div>`;
+    row.appendChild(box);
+  });
+  arrDiagramEl.appendChild(row);
+}
+
+const arraySteps = [
+  { line:0, arr:[], hl:-1, msg:"<code>arr = []</code> — initialize an empty list" },
+  { line:2, arr:[10], hl:0, msg:"<code>arr.append(10)</code> — add 10 at index 0" },
+  { line:3, arr:[10,20], hl:1, msg:"<code>arr.append(20)</code> — add 20 at index 1" },
+  { line:4, arr:[10,20,30], hl:2, msg:"<code>arr.append(30)</code> — add 30 at index 2" },
+  { line:5, arr:[10,20,30,40], hl:3, msg:"<code>arr.append(40)</code> — add 40 at index 3" },
+  { line:7, arr:[10,20,30,40], hl:0, msg:"<code>arr[0]</code> — access index 0, value is <strong>10</strong>" },
+  { line:8, arr:[10,20,30,40], hl:2, msg:"<code>arr[2]</code> — access index 2, value is <strong>30</strong>" },
+  { line:10, arr:[10,20,30], hl:-1, msg:"<code>arr.pop()</code> — removes last element (40)" },
+  { line:12, arr:[10,99,20,30], hl:1, msg:"<code>arr.insert(1, 99)</code> — inserts 99 at index 1, shifting others right" },
+];
+
+let arrState = { prevLine: null };
+function resetArray() {
+  arrState = { prevLine: null };
+  renderCode('array-code', arrayCode);
+  renderArrayDiagram([]);
+  arrCalloutEl.innerHTML = 'Press <strong>Step →</strong> to begin';
+}
+renderCode('array-code', arrayCode);
+renderArrayDiagram([]);
+makeController(
+  document.getElementById('array-step'), document.getElementById('array-reset'),
+  document.getElementById('array-auto'), document.getElementById('array-step-num'),
+  document.getElementById('array-step-total'), arraySteps,
+  (i) => {
+    const s = arraySteps[i];
+    highlightLine('array-code', s.line, arrState.prevLine);
+    arrState.prevLine = s.line;
+    renderArrayDiagram(s.arr, s.hl);
+    arrCalloutEl.innerHTML = s.msg;
+  }, resetArray
+);
+
+
+// ══════════════════════════════════════════════════════════════
+//  LINKED LIST
+// ══════════════════════════════════════════════════════════════
 const linkedCode = [
   "class Node:",
   "    def __init__(self, val):",
@@ -147,31 +200,13 @@ const linkedCode = [
   "ll.append(30)",
 ];
 
-let currentArrayMode = 'array-tab';
-const diagramEl = document.getElementById('array-diagram');
-const calloutEl = document.getElementById('array-callout');
-
-function renderArrayDiagram(arr, highlightIdx = -1) {
-  diagramEl.innerHTML = '';
-  if (arr.length === 0) {
-    diagramEl.innerHTML = '<span style="color:var(--text-dim);font-family:var(--mono);font-size:.8rem">[ empty ]</span>';
-    return;
-  }
-  arr.forEach((val, i) => {
-    const box = document.createElement('div');
-    box.className = 'arr-box';
-    box.innerHTML = `
-      <div class="arr-cell ${i === highlightIdx ? 'highlight' : ''}">${val}</div>
-      <div class="arr-idx">[${i}]</div>
-    `;
-    diagramEl.appendChild(box);
-  });
-}
+const llDiagramEl = document.getElementById('linked-diagram');
+const llCalloutEl = document.getElementById('linked-callout');
 
 function renderLinkedDiagram(nodes, highlightIdx = -1) {
-  diagramEl.innerHTML = '';
+  llDiagramEl.innerHTML = '';
   if (nodes.length === 0) {
-    diagramEl.innerHTML = '<span style="color:var(--text-dim);font-family:var(--mono);font-size:.8rem">head → None</span>';
+    llDiagramEl.innerHTML = '<span style="color:var(--text-dim);font-family:var(--mono);font-size:.8rem">head → None</span>';
     return;
   }
   const cont = document.createElement('div');
@@ -181,169 +216,73 @@ function renderLinkedDiagram(nodes, highlightIdx = -1) {
     node.className = 'll-node';
     const isLast = i === nodes.length - 1;
     node.innerHTML = `
-      <div class="ll-cell ${i === highlightIdx ? 'highlight' : ''}">
+      <div class="ll-cell ${i===highlightIdx?'highlight':''}">
         <div class="ll-val">${val}</div>
         <div class="ll-ptr">${isLast ? 'None' : '→'}</div>
       </div>
-      ${!isLast ? '<div class="ll-arrow">→</div>' : ''}
-    `;
+      ${!isLast ? '<div class="ll-arrow">→</div>' : ''}`;
     cont.appendChild(node);
   });
-  const nullEl = document.createElement('div');
-  nullEl.innerHTML = '';
-  cont.appendChild(nullEl);
-  diagramEl.appendChild(cont);
+  llDiagramEl.appendChild(cont);
 }
 
-// Array steps
-const arraySteps = [
-  { line: 1, arr: [], hl: -1, msg: "Comment — describing what we're doing" },
-  { line: 1, arr: [], hl: -1, msg: "<code>arr = []</code> — initialize an empty list" },
-  { line: 3, arr: [], hl: -1, msg: "Comment — we'll append elements next" },
-  { line: 4, arr: [10], hl: 0, msg: "<code>arr.append(10)</code> — add 10 at index 0" },
-  { line: 5, arr: [10,20], hl: 1, msg: "<code>arr.append(20)</code> — add 20 at index 1" },
-  { line: 6, arr: [10,20,30], hl: 2, msg: "<code>arr.append(30)</code> — add 30 at index 2" },
-  { line: 7, arr: [10,20,30,40], hl: 3, msg: "<code>arr.append(40)</code> — add 40 at index 3" },
-  { line: 9, arr: [10,20,30,40], hl: -1, msg: "Comment — we'll access elements by index" },
-  { line: 10, arr: [10,20,30,40], hl: 0, msg: "<code>arr[0]</code> — access index 0, value is <strong>10</strong>" },
-  { line: 11, arr: [10,20,30,40], hl: 2, msg: "<code>arr[2]</code> — access index 2, value is <strong>30</strong>" },
-  { line: 13, arr: [10,20,30,40], hl: -1, msg: "Comment — removing the last element" },
-  { line: 14, arr: [10,20,30], hl: -1, msg: "<code>arr.pop()</code> — removes last element (40). Array now has 3 items." },
-  { line: 16, arr: [10,20,30], hl: -1, msg: "Comment — inserting at a specific position" },
-  { line: 17, arr: [10,99,20,30], hl: 1, msg: "<code>arr.insert(1, 99)</code> — inserts 99 at index 1, shifting others right" },
-];
-
-// Linked list steps
 const llSteps = [
-  { line: 0, nodes: [], hl: -1, msg: "<code>class Node</code> — define a node with a value and pointer to next" },
-  { line: 1, nodes: [], hl: -1, msg: "<code>__init__</code> — constructor: store val, set next = None" },
-  { line: 5, nodes: [], hl: -1, msg: "<code>class LinkedList</code> — our linked list wrapper" },
-  { line: 6, nodes: [], hl: -1, msg: "<code>self.head = None</code> — empty list: head points to nothing" },
-  { line: 9, nodes: [], hl: -1, msg: "<code>append(val)</code> — method to add a node at the end" },
-  { line: 19, nodes: [], hl: -1, msg: "<code>ll = LinkedList()</code> — create a new empty list" },
-  { line: 20, nodes: [10], hl: 0, msg: "<code>ll.append(10)</code> — no head yet, so new node <em>becomes</em> the head" },
-  { line: 21, nodes: [10,20], hl: 1, msg: "<code>ll.append(20)</code> — traverse to end, link 10 → 20" },
-  { line: 22, nodes: [10,20,30], hl: 2, msg: "<code>ll.append(30)</code> — traverse to end, link 20 → 30 → None" },
+  { line:0, nodes:[], hl:-1, msg:"<code>class Node</code> — each node holds a value and a <code>next</code> pointer" },
+  { line:1, nodes:[], hl:-1, msg:"<code>__init__</code> — store val, set next = None" },
+  { line:5, nodes:[], hl:-1, msg:"<code>class LinkedList</code> — wrapper class for the chain of nodes" },
+  { line:6, nodes:[], hl:-1, msg:"<code>self.head = None</code> — empty list: head points to nothing" },
+  { line:9, nodes:[], hl:-1, msg:"<code>append(val)</code> — method to add a node at the end" },
+  { line:19, nodes:[], hl:-1, msg:"<code>ll = LinkedList()</code> — create a new empty linked list" },
+  { line:20, nodes:[10], hl:0, msg:"<code>ll.append(10)</code> — head is None, so 10 becomes the head" },
+  { line:21, nodes:[10,20], hl:1, msg:"<code>ll.append(20)</code> — traverse to end, link 10 → 20" },
+  { line:22, nodes:[10,20,30], hl:2, msg:"<code>ll.append(30)</code> — traverse to end, link 20 → 30 → None" },
 ];
 
-let arrState = { arr: [], prevLine: null };
-let llState  = { nodes: [], prevLine: null };
-
-function resetArraySection() {
-  arrState = { arr: [], prevLine: null };
-  llState  = { nodes: [], prevLine: null };
-  if (currentArrayMode === 'array-tab') {
-    renderCode('array-code', arrayCode);
-    renderArrayDiagram([]);
-  } else {
-    renderCode('array-code', linkedCode);
-    renderLinkedDiagram([]);
-  }
-  calloutEl.innerHTML = 'Press <strong>Step →</strong> to begin';
+let llState = { prevLine: null };
+function resetLinked() {
+  llState = { prevLine: null };
+  renderCode('linked-code', linkedCode);
+  renderLinkedDiagram([]);
+  llCalloutEl.innerHTML = 'Press <strong>Step →</strong> to begin';
 }
-
-function runArrayStep(i) {
-  if (currentArrayMode === 'array-tab') {
-    const s = arraySteps[i];
-    highlightLine('array-code', s.line, arrState.prevLine);
-    arrState.prevLine = s.line;
-    arrState.arr = s.arr.slice();
-    renderArrayDiagram(arrState.arr, s.hl);
-    calloutEl.innerHTML = s.msg;
-  } else {
-    const s = llSteps[i];
-    highlightLine('array-code', s.line, llState.prevLine);
-    llState.prevLine = s.line;
-    llState.nodes = s.nodes.slice();
-    renderLinkedDiagram(llState.nodes, s.hl);
-    calloutEl.innerHTML = s.msg;
-  }
-}
-
-// Tab switching for arrays section
-document.querySelectorAll('[data-tab="array-tab"], [data-tab="linked-tab"]').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('[data-tab="array-tab"], [data-tab="linked-tab"]').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    currentArrayMode = btn.dataset.tab;
-    resetArraySection();
-    // re-bind steps
-    const steps = currentArrayMode === 'array-tab' ? arraySteps : llSteps;
-    document.getElementById('array-step-total').textContent = steps.length;
-    document.getElementById('array-step-num').textContent = 0;
-  });
-});
-
-renderCode('array-code', arrayCode);
-renderArrayDiagram([]);
-
+renderCode('linked-code', linkedCode);
+renderLinkedDiagram([]);
 makeController(
-  document.getElementById('array-step'),
-  document.getElementById('array-reset'),
-  document.getElementById('array-auto'),
-  document.getElementById('array-step-num'),
-  document.getElementById('array-step-total'),
-  arraySteps,
+  document.getElementById('linked-step'), document.getElementById('linked-reset'),
+  document.getElementById('linked-auto'), document.getElementById('linked-step-num'),
+  document.getElementById('linked-step-total'), llSteps,
   (i) => {
-    const steps = currentArrayMode === 'array-tab' ? arraySteps : llSteps;
-    if (i < steps.length) runArrayStep(i);
-  },
-  resetArraySection
+    const s = llSteps[i];
+    highlightLine('linked-code', s.line, llState.prevLine);
+    llState.prevLine = s.line;
+    renderLinkedDiagram(s.nodes, s.hl);
+    llCalloutEl.innerHTML = s.msg;
+  }, resetLinked
 );
 
-document.getElementById('array-step-total').textContent = arraySteps.length;
-
 
 // ══════════════════════════════════════════════════════════════
-//  STACKS & QUEUES
+//  STACK
 // ══════════════════════════════════════════════════════════════
 const stackCode = [
-  "# Stack — LIFO (Last In, First Out)",
   "stack = []",
   "",
-  "# Push operations",
-  "stack.append('A')  # push A",
-  "stack.append('B')  # push B",
-  "stack.append('C')  # push C",
+  "stack.append('A')",
+  "stack.append('B')",
+  "stack.append('C')",
   "",
-  "# Peek at top",
-  "top = stack[-1]    # top = 'C'",
+  "top = stack[-1]",
   "",
-  "# Pop operations",
-  "stack.pop()        # remove C",
-  "stack.pop()        # remove B",
+  "stack.pop()",
+  "stack.pop()",
   "",
-  "# Stack is now: ['A']",
-  "print(stack)       # ['A']",
+  "print(stack)",
 ];
 
-const queueCode = [
-  "from collections import deque",
-  "",
-  "# Queue — FIFO (First In, First Out)",
-  "q = deque()",
-  "",
-  "# Enqueue (add to rear)",
-  "q.append('X')      # queue: X",
-  "q.append('Y')      # queue: X → Y",
-  "q.append('Z')      # queue: X → Y → Z",
-  "",
-  "# Peek front",
-  "front = q[0]       # front = 'X'",
-  "",
-  "# Dequeue (remove from front)",
-  "q.popleft()        # removes X",
-  "q.popleft()        # removes Y",
-  "",
-  "# Queue is now: deque(['Z'])",
-  "print(q)           # deque(['Z'])",
-];
-
-let currentStackMode = 'stack-tab';
 const stackDiagramEl = document.getElementById('stack-diagram');
 const stackCalloutEl = document.getElementById('stack-callout');
 
-function renderStackDiagram(items, topHighlight = false) {
+function renderStackDiagram(items) {
   stackDiagramEl.innerHTML = '';
   if (items.length === 0) {
     stackDiagramEl.innerHTML = '<span style="color:var(--text-dim);font-family:var(--mono);font-size:.8rem">[ empty stack ]</span>';
@@ -364,10 +303,67 @@ function renderStackDiagram(items, topHighlight = false) {
   stackDiagramEl.appendChild(cont);
 }
 
+const stackSteps = [
+  { line:0, items:[], msg:"<code>stack = []</code> — create an empty stack (Python list)" },
+  { line:2, items:['A'], msg:"<code>stack.append('A')</code> — push 'A'. Stack: [A]" },
+  { line:3, items:['A','B'], msg:"<code>stack.append('B')</code> — push 'B'. Stack: [A, B]" },
+  { line:4, items:['A','B','C'], msg:"<code>stack.append('C')</code> — push 'C'. Stack: [A, B, C]" },
+  { line:6, items:['A','B','C'], msg:"<code>stack[-1]</code> — peek at top without removing. Returns <strong>'C'</strong>" },
+  { line:8, items:['A','B'], msg:"<code>stack.pop()</code> — removes top 'C'. LIFO: last in, first out" },
+  { line:9, items:['A'], msg:"<code>stack.pop()</code> — removes 'B'. Only 'A' remains" },
+  { line:11, items:['A'], msg:"<code>print(stack)</code> → <strong>['A']</strong>" },
+];
+
+let stkState = { prevLine: null };
+function resetStack() {
+  stkState = { prevLine: null };
+  renderCode('stack-code', stackCode);
+  renderStackDiagram([]);
+  stackCalloutEl.innerHTML = 'Press <strong>Step →</strong> to begin';
+}
+renderCode('stack-code', stackCode);
+renderStackDiagram([]);
+makeController(
+  document.getElementById('stack-step'), document.getElementById('stack-reset'),
+  document.getElementById('stack-auto'), document.getElementById('stack-step-num'),
+  document.getElementById('stack-step-total'), stackSteps,
+  (i) => {
+    const s = stackSteps[i];
+    highlightLine('stack-code', s.line, stkState.prevLine);
+    stkState.prevLine = s.line;
+    renderStackDiagram(s.items);
+    stackCalloutEl.innerHTML = s.msg;
+  }, resetStack
+);
+
+
+// ══════════════════════════════════════════════════════════════
+//  QUEUE
+// ══════════════════════════════════════════════════════════════
+const queueCode = [
+  "from collections import deque",
+  "",
+  "q = deque()",
+  "",
+  "q.append('X')",
+  "q.append('Y')",
+  "q.append('Z')",
+  "",
+  "front = q[0]",
+  "",
+  "q.popleft()",
+  "q.popleft()",
+  "",
+  "print(q)",
+];
+
+const queueDiagramEl = document.getElementById('queue-diagram');
+const queueCalloutEl = document.getElementById('queue-callout');
+
 function renderQueueDiagram(items) {
-  stackDiagramEl.innerHTML = '';
+  queueDiagramEl.innerHTML = '';
   if (items.length === 0) {
-    stackDiagramEl.innerHTML = '<span style="color:var(--text-dim);font-family:var(--mono);font-size:.8rem">[ empty queue ]</span>';
+    queueDiagramEl.innerHTML = '<span style="color:var(--text-dim);font-family:var(--mono);font-size:.8rem">[ empty queue ]</span>';
     return;
   }
   const cont = document.createElement('div');
@@ -380,110 +376,46 @@ function renderQueueDiagram(items) {
     el.textContent = v;
     cont.appendChild(el);
   });
-  stackDiagramEl.appendChild(cont);
-
-  // labels
+  queueDiagramEl.appendChild(cont);
   const row = document.createElement('div');
-  row.style.cssText = 'display:flex;gap:.5rem;margin-top:.5rem;font-family:var(--mono);font-size:.65rem;';
+  row.style.cssText = 'display:flex;gap:.5rem;margin-top:.5rem;font-family:var(--mono);font-size:.65rem;width:100%;';
   row.innerHTML = `<span style="color:var(--accent2)">FRONT ↑</span><span style="flex:1"></span><span style="color:var(--accent)">↑ REAR</span>`;
-  stackDiagramEl.appendChild(row);
+  queueDiagramEl.appendChild(row);
 }
-
-const stackSteps = [
-  { line:0, items:[], msg:"Comment — Stack uses LIFO order" },
-  { line:1, items:[], msg:"<code>stack = []</code> — create an empty stack (Python list)" },
-  { line:3, items:[], msg:"Comment — push operations" },
-  { line:4, items:['A'], msg:"<code>stack.append('A')</code> — push 'A'. Stack: [A]" },
-  { line:5, items:['A','B'], msg:"<code>stack.append('B')</code> — push 'B'. Stack: [A, B]" },
-  { line:6, items:['A','B','C'], msg:"<code>stack.append('C')</code> — push 'C'. Stack: [A, B, C]" },
-  { line:8, items:['A','B','C'], msg:"Comment — peek at top without removing" },
-  { line:9, items:['A','B','C'], msg:"<code>stack[-1]</code> — peek at top element. Returns <strong>'C'</strong>" },
-  { line:11, items:['A','B','C'], msg:"Comment — pop removes from the top" },
-  { line:12, items:['A','B'], msg:"<code>stack.pop()</code> — removes 'C' (the top). Stack: [A, B]" },
-  { line:13, items:['A'], msg:"<code>stack.pop()</code> — removes 'B'. Stack: [A]" },
-  { line:15, items:['A'], msg:"Only 'A' remains in the stack" },
-  { line:16, items:['A'], msg:"<code>print(stack)</code> → <strong>['A']</strong>" },
-];
 
 const queueSteps = [
-  { line:0, items:[], msg:"<code>from collections import deque</code> — import deque for efficient queue" },
-  { line:2, items:[], msg:"Comment — Queue uses FIFO order" },
-  { line:3, items:[], msg:"<code>q = deque()</code> — create an empty double-ended queue" },
-  { line:5, items:[], msg:"Comment — enqueue adds to the rear" },
-  { line:6, items:['X'], msg:"<code>q.append('X')</code> — enqueue X at rear. Queue: [X]" },
-  { line:7, items:['X','Y'], msg:"<code>q.append('Y')</code> — enqueue Y. Queue: [X → Y]" },
-  { line:8, items:['X','Y','Z'], msg:"<code>q.append('Z')</code> — enqueue Z. Queue: [X → Y → Z]" },
-  { line:10, items:['X','Y','Z'], msg:"Comment — peek at the front without removing" },
-  { line:11, items:['X','Y','Z'], msg:"<code>q[0]</code> — peek at front. Returns <strong>'X'</strong>" },
-  { line:13, items:['X','Y','Z'], msg:"Comment — dequeue removes from the front" },
-  { line:14, items:['Y','Z'], msg:"<code>q.popleft()</code> — dequeue 'X' from front. Queue: [Y → Z]" },
-  { line:15, items:['Z'], msg:"<code>q.popleft()</code> — dequeue 'Y'. Queue: [Z]" },
-  { line:17, items:['Z'], msg:"Only 'Z' remains" },
-  { line:18, items:['Z'], msg:"<code>print(q)</code> → <strong>deque(['Z'])</strong>" },
+  { line:0, items:[], msg:"<code>from collections import deque</code> — import deque for an efficient queue" },
+  { line:2, items:[], msg:"<code>q = deque()</code> — create an empty double-ended queue" },
+  { line:4, items:['X'], msg:"<code>q.append('X')</code> — enqueue X at rear. Queue: [X]" },
+  { line:5, items:['X','Y'], msg:"<code>q.append('Y')</code> — enqueue Y. Queue: [X → Y]" },
+  { line:6, items:['X','Y','Z'], msg:"<code>q.append('Z')</code> — enqueue Z. Queue: [X → Y → Z]" },
+  { line:8, items:['X','Y','Z'], msg:"<code>q[0]</code> — peek at front. Returns <strong>'X'</strong>" },
+  { line:10, items:['Y','Z'], msg:"<code>q.popleft()</code> — dequeue 'X' from front. FIFO: first in, first out" },
+  { line:11, items:['Z'], msg:"<code>q.popleft()</code> — dequeue 'Y'. Only 'Z' remains" },
+  { line:13, items:['Z'], msg:"<code>print(q)</code> → <strong>deque(['Z'])</strong>" },
 ];
 
-let stkState = { items: [], prevLine: null };
-let qState   = { items: [], prevLine: null };
-
-function resetStackSection() {
-  stkState = { items: [], prevLine: null };
-  qState   = { items: [], prevLine: null };
-  if (currentStackMode === 'stack-tab') {
-    renderCode('stack-code', stackCode);
-    renderStackDiagram([]);
-  } else {
-    renderCode('stack-code', queueCode);
-    renderQueueDiagram([]);
-  }
-  stackCalloutEl.innerHTML = 'Press <strong>Step →</strong> to begin';
+let qState = { prevLine: null };
+function resetQueue() {
+  qState = { prevLine: null };
+  renderCode('queue-code', queueCode);
+  renderQueueDiagram([]);
+  queueCalloutEl.innerHTML = 'Press <strong>Step →</strong> to begin';
 }
-
-function runStackStep(i) {
-  if (currentStackMode === 'stack-tab') {
-    const s = stackSteps[i];
-    highlightLine('stack-code', s.line, stkState.prevLine);
-    stkState.prevLine = s.line;
-    renderStackDiagram(s.items);
-    stackCalloutEl.innerHTML = s.msg;
-  } else {
+renderCode('queue-code', queueCode);
+renderQueueDiagram([]);
+makeController(
+  document.getElementById('queue-step'), document.getElementById('queue-reset'),
+  document.getElementById('queue-auto'), document.getElementById('queue-step-num'),
+  document.getElementById('queue-step-total'), queueSteps,
+  (i) => {
     const s = queueSteps[i];
-    highlightLine('stack-code', s.line, qState.prevLine);
+    highlightLine('queue-code', s.line, qState.prevLine);
     qState.prevLine = s.line;
     renderQueueDiagram(s.items);
-    stackCalloutEl.innerHTML = s.msg;
-  }
-}
-
-document.querySelectorAll('[data-tab="stack-tab"], [data-tab="queue-tab"]').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('[data-tab="stack-tab"], [data-tab="queue-tab"]').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    currentStackMode = btn.dataset.tab;
-    resetStackSection();
-    const steps = currentStackMode === 'stack-tab' ? stackSteps : queueSteps;
-    document.getElementById('stack-step-total').textContent = steps.length;
-    document.getElementById('stack-step-num').textContent = 0;
-  });
-});
-
-renderCode('stack-code', stackCode);
-renderStackDiagram([]);
-
-makeController(
-  document.getElementById('stack-step'),
-  document.getElementById('stack-reset'),
-  document.getElementById('stack-auto'),
-  document.getElementById('stack-step-num'),
-  document.getElementById('stack-step-total'),
-  stackSteps,
-  (i) => {
-    const steps = currentStackMode === 'stack-tab' ? stackSteps : queueSteps;
-    if (i < steps.length) runStackStep(i);
-  },
-  resetStackSection
+    queueCalloutEl.innerHTML = s.msg;
+  }, resetQueue
 );
-
-document.getElementById('stack-step-total').textContent = stackSteps.length;
 
 
 // ══════════════════════════════════════════════════════════════
