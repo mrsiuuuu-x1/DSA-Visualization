@@ -52,7 +52,7 @@ function highlightLine(preId, lineIdx, prevIdx) {
   }
   if (lineIdx >= 0) {
     const el = document.getElementById(`${preId}-line-${lineIdx}`);
-    if (el) { el.classList.add('active'); el.scrollIntoView({ block: 'nearest' }); }
+    if (el) { el.classList.add('active'); }
   }
 }
 
@@ -265,64 +265,103 @@ makeController(
 //  STACK
 // ══════════════════════════════════════════════════════════════
 const stackCode = [
-  "stack = []",
+  "Stack = [-1] * 30",
+  "TopOfStack = -1",
   "",
-  "stack.append('A')",
-  "stack.append('B')",
-  "stack.append('C')",
+  "def Push(item):",
+  "    global Stack, TopOfStack",
+  "    if TopOfStack > 29:",
+  "        return False",
+  "    else:",
+  "        TopOfStack += 1",
+  "        Stack[TopOfStack] = item",
+  "        return True",
   "",
-  "top = stack[-1]",
+  "def Pop():",
+  "    global Stack, TopOfStack",
+  "    if TopOfStack == -1:",
+  "        return -999",
+  "    else:",
+  "        value = Stack[TopOfStack]",
+  "        TopOfStack -= 1",
+  "        return value",
   "",
-  "stack.pop()",
-  "stack.pop()",
+  "Push(10)",
+  "Push(25)",
+  "Push(7)",
+  "Push(43)",
+  "Push(18)",
   "",
-  "print(stack)",
+  "Pop()",
+  "Pop()",
 ];
 
 const stackDiagramEl = document.getElementById('stack-diagram');
 const stackCalloutEl = document.getElementById('stack-callout');
 
-function renderStackDiagram(items) {
+// Renders stack + the array slots side by side
+function renderStackDiagram(items, topIdx, highlightSlot = -1) {
   stackDiagramEl.innerHTML = '';
+
+  // Left: visual stack
+  const left = document.createElement('div');
+  left.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:6px;min-width:120px;';
+
   if (items.length === 0) {
-    stackDiagramEl.innerHTML = '<span style="color:var(--text-dim);font-family:var(--mono);font-size:.8rem">[ empty stack ]</span>';
-    return;
+    left.innerHTML = '<span style="color:var(--text-dim);font-family:var(--mono);font-size:.8rem">[ empty ]</span>';
+  } else {
+    const lbl = document.createElement('div');
+    lbl.style.cssText = 'font-family:var(--mono);font-size:.65rem;color:var(--accent);letter-spacing:.08em;margin-bottom:2px;';
+    lbl.textContent = '▲ TOP';
+    left.appendChild(lbl);
+    [...items].reverse().forEach((v, ri) => {
+      const isTop = ri === 0;
+      const el = document.createElement('div');
+      el.className = 'stack-item' + (isTop ? ' top-item' : '');
+      el.textContent = v;
+      left.appendChild(el);
+    });
   }
-  const cont = document.createElement('div');
-  cont.className = 'stack-container';
-  items.forEach((v, i) => {
-    const el = document.createElement('div');
-    el.className = 'stack-item' + (i === items.length-1 ? ' top-item' : '');
-    el.textContent = v;
-    cont.appendChild(el);
-  });
-  const lbl = document.createElement('div');
-  lbl.className = 'stack-label';
-  lbl.textContent = '← TOP';
-  cont.appendChild(lbl);
-  stackDiagramEl.appendChild(cont);
+
+  // Right: TopOfStack indicator
+  const right = document.createElement('div');
+  right.style.cssText = 'display:flex;flex-direction:column;justify-content:center;gap:4px;font-family:var(--mono);font-size:.72rem;';
+  right.innerHTML = `
+    <div style="color:var(--text-dim)">TopOfStack</div>
+    <div style="color:var(--accent);font-size:1rem;font-weight:700;">${topIdx}</div>
+    <div style="color:var(--text-dim);font-size:.65rem;">Stack[${topIdx}] = ${topIdx >= 0 ? items[items.length-1] : '—'}</div>
+  `;
+
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'display:flex;gap:2rem;align-items:center;justify-content:center;width:100%;';
+  wrap.appendChild(left);
+  wrap.appendChild(right);
+  stackDiagramEl.appendChild(wrap);
 }
 
 const stackSteps = [
-  { line:0, items:[], msg:"<code>stack = []</code> — create an empty stack (Python list)" },
-  { line:2, items:['A'], msg:"<code>stack.append('A')</code> — push 'A'. Stack: [A]" },
-  { line:3, items:['A','B'], msg:"<code>stack.append('B')</code> — push 'B'. Stack: [A, B]" },
-  { line:4, items:['A','B','C'], msg:"<code>stack.append('C')</code> — push 'C'. Stack: [A, B, C]" },
-  { line:6, items:['A','B','C'], msg:"<code>stack[-1]</code> — peek at top without removing. Returns <strong>'C'</strong>" },
-  { line:8, items:['A','B'], msg:"<code>stack.pop()</code> — removes top 'C'. LIFO: last in, first out" },
-  { line:9, items:['A'], msg:"<code>stack.pop()</code> — removes 'B'. Only 'A' remains" },
-  { line:11, items:['A'], msg:"<code>print(stack)</code> → <strong>['A']</strong>" },
+  { line:0,  items:[], top:-1,  msg:"<code>Stack = [-1] * 30</code> — pre-allocate array of 30 slots, all -1" },
+  { line:1,  items:[], top:-1,  msg:"<code>TopOfStack = -1</code> — -1 means the stack is empty" },
+  { line:3,  items:[], top:-1,  msg:"<code>def Push(item)</code> — checks if full (TopOfStack > 29), then increments and inserts" },
+  { line:12, items:[], top:-1,  msg:"<code>def Pop()</code> — checks if empty (TopOfStack == -1), then reads value and decrements" },
+  { line:21, items:[10], top:0, msg:"<code>Push(10)</code> — TopOfStack: -1→0, Stack[0] = 10" },
+  { line:22, items:[10,25], top:1, msg:"<code>Push(25)</code> — TopOfStack: 0→1, Stack[1] = 25" },
+  { line:23, items:[10,25,7], top:2, msg:"<code>Push(7)</code> — TopOfStack: 1→2, Stack[2] = 7" },
+  { line:24, items:[10,25,7,43], top:3, msg:"<code>Push(43)</code> — TopOfStack: 2→3, Stack[3] = 43" },
+  { line:25, items:[10,25,7,43,18], top:4, msg:"<code>Push(18)</code> — TopOfStack: 3→4, Stack[4] = 18" },
+  { line:27, items:[10,25,7,43], top:3, msg:"<code>Pop()</code> — value = Stack[4] = 18, TopOfStack: 4→3. Returns 18" },
+  { line:28, items:[10,25,7], top:2, msg:"<code>Pop()</code> — value = Stack[3] = 43, TopOfStack: 3→2. Returns 43" },
 ];
 
 let stkState = { prevLine: null };
 function resetStack() {
   stkState = { prevLine: null };
   renderCode('stack-code', stackCode);
-  renderStackDiagram([]);
+  renderStackDiagram([], -1);
   stackCalloutEl.innerHTML = 'Press <strong>Step →</strong> to begin';
 }
 renderCode('stack-code', stackCode);
-renderStackDiagram([]);
+renderStackDiagram([], -1);
 makeController(
   document.getElementById('stack-step'), document.getElementById('stack-reset'),
   document.getElementById('stack-auto'), document.getElementById('stack-step-num'),
@@ -331,7 +370,7 @@ makeController(
     const s = stackSteps[i];
     highlightLine('stack-code', s.line, stkState.prevLine);
     stkState.prevLine = s.line;
-    renderStackDiagram(s.items);
+    renderStackDiagram(s.items, s.top);
     stackCalloutEl.innerHTML = s.msg;
   }, resetStack
 );
@@ -341,69 +380,108 @@ makeController(
 //  QUEUE
 // ══════════════════════════════════════════════════════════════
 const queueCode = [
-  "from collections import deque",
+  "Queue = ['' for x in range(100)]",
+  "HeadPointer = -1",
+  "TailPointer = -1",
+  "NumberItems = 0",
   "",
-  "q = deque()",
+  "def EnQueue(val):",
+  "    global Queue, HeadPointer, TailPointer, NumberItems",
+  "    if NumberItems == 100:",
+  "        return False",
+  "    else:",
+  "        if NumberItems == 0:",
+  "            HeadPointer = 0",
+  "            TailPointer = 0",
+  "        else:",
+  "            TailPointer += 1",
+  "        Queue[TailPointer] = val",
+  "        NumberItems += 1",
+  "        return True",
   "",
-  "q.append('X')",
-  "q.append('Y')",
-  "q.append('Z')",
+  "def DeQueue():",
+  "    global Queue, HeadPointer, TailPointer, NumberItems",
+  "    if NumberItems == 0:",
+  "        return 'False'",
+  "    else:",
+  "        item = Queue[HeadPointer]",
+  "        NumberItems -= 1",
+  "        if NumberItems == 0:",
+  "            TailPointer = -1",
+  "            HeadPointer = -1",
+  "        HeadPointer += 1",
+  "        return item",
   "",
-  "front = q[0]",
+  "EnQueue(15)",
+  "EnQueue(32)",
+  "EnQueue(8)",
+  "EnQueue(61)",
+  "EnQueue(27)",
   "",
-  "q.popleft()",
-  "q.popleft()",
-  "",
-  "print(q)",
+  "DeQueue()",
+  "DeQueue()",
 ];
 
 const queueDiagramEl = document.getElementById('queue-diagram');
 const queueCalloutEl = document.getElementById('queue-callout');
 
-function renderQueueDiagram(items) {
+function renderQueueDiagram(items, head, tail, count) {
   queueDiagramEl.innerHTML = '';
+
+  // Queue slots visual
+  const top = document.createElement('div');
+  top.style.cssText = 'display:flex;gap:4px;flex-wrap:wrap;justify-content:center;width:100%;';
+
   if (items.length === 0) {
-    queueDiagramEl.innerHTML = '<span style="color:var(--text-dim);font-family:var(--mono);font-size:.8rem">[ empty queue ]</span>';
-    return;
+    top.innerHTML = '<span style="color:var(--text-dim);font-family:var(--mono);font-size:.8rem">[ empty queue ]</span>';
+  } else {
+    items.forEach((v, i) => {
+      const el = document.createElement('div');
+      el.className = 'queue-item'
+        + (i === 0 ? ' front-item' : '')
+        + (i === items.length - 1 ? ' rear-item' : '');
+      el.textContent = v;
+      top.appendChild(el);
+    });
   }
-  const cont = document.createElement('div');
-  cont.className = 'queue-container';
-  items.forEach((v, i) => {
-    const el = document.createElement('div');
-    el.className = 'queue-item'
-      + (i === 0 ? ' front-item' : '')
-      + (i === items.length-1 ? ' rear-item' : '');
-    el.textContent = v;
-    cont.appendChild(el);
-  });
-  queueDiagramEl.appendChild(cont);
-  const row = document.createElement('div');
-  row.style.cssText = 'display:flex;gap:.5rem;margin-top:.5rem;font-family:var(--mono);font-size:.65rem;width:100%;';
-  row.innerHTML = `<span style="color:var(--accent2)">FRONT ↑</span><span style="flex:1"></span><span style="color:var(--accent)">↑ REAR</span>`;
-  queueDiagramEl.appendChild(row);
+  queueDiagramEl.appendChild(top);
+
+  // Pointer info row
+  const info = document.createElement('div');
+  info.style.cssText = 'display:flex;gap:1.5rem;margin-top:.6rem;font-family:var(--mono);font-size:.72rem;justify-content:center;';
+  info.innerHTML = `
+    <span style="color:var(--accent2)">Head: <strong>${head}</strong></span>
+    <span style="color:var(--accent)">Tail: <strong>${tail}</strong></span>
+    <span style="color:var(--text-dim)">Count: <strong>${count}</strong></span>
+  `;
+  queueDiagramEl.appendChild(info);
 }
 
 const queueSteps = [
-  { line:0, items:[], msg:"<code>from collections import deque</code> — import deque for an efficient queue" },
-  { line:2, items:[], msg:"<code>q = deque()</code> — create an empty double-ended queue" },
-  { line:4, items:['X'], msg:"<code>q.append('X')</code> — enqueue X at rear. Queue: [X]" },
-  { line:5, items:['X','Y'], msg:"<code>q.append('Y')</code> — enqueue Y. Queue: [X → Y]" },
-  { line:6, items:['X','Y','Z'], msg:"<code>q.append('Z')</code> — enqueue Z. Queue: [X → Y → Z]" },
-  { line:8, items:['X','Y','Z'], msg:"<code>q[0]</code> — peek at front. Returns <strong>'X'</strong>" },
-  { line:10, items:['Y','Z'], msg:"<code>q.popleft()</code> — dequeue 'X' from front. FIFO: first in, first out" },
-  { line:11, items:['Z'], msg:"<code>q.popleft()</code> — dequeue 'Y'. Only 'Z' remains" },
-  { line:13, items:['Z'], msg:"<code>print(q)</code> → <strong>deque(['Z'])</strong>" },
+  { line:0,  items:[], head:-1, tail:-1, count:0, msg:"<code>Queue = ['' for x in range(100)]</code> — pre-allocate 100 empty string slots" },
+  { line:1,  items:[], head:-1, tail:-1, count:0, msg:"<code>HeadPointer = -1</code> — -1 means nothing in queue yet" },
+  { line:2,  items:[], head:-1, tail:-1, count:0, msg:"<code>TailPointer = -1</code> — tail also -1 when empty" },
+  { line:3,  items:[], head:-1, tail:-1, count:0, msg:"<code>NumberItems = 0</code> — queue is empty" },
+  { line:5,  items:[], head:-1, tail:-1, count:0, msg:"<code>def EnQueue(val)</code> — if full (100 items) return False. First item sets both Head and Tail to 0; others just increment Tail" },
+  { line:19, items:[], head:-1, tail:-1, count:0, msg:"<code>def DeQueue()</code> — if empty return 'False'. Read from Head, decrement count, increment HeadPointer" },
+  { line:32, items:[15], head:0, tail:0, count:1, msg:"<code>EnQueue(15)</code> — NumberItems was 0 → Head=0, Tail=0. Queue[0]=15. Count: 1" },
+  { line:33, items:[15,32], head:0, tail:1, count:2, msg:"<code>EnQueue(32)</code> — Tail: 0→1. Queue[1]=32. Count: 2" },
+  { line:34, items:[15,32,8], head:0, tail:2, count:3, msg:"<code>EnQueue(8)</code> — Tail: 1→2. Queue[2]=8. Count: 3" },
+  { line:35, items:[15,32,8,61], head:0, tail:3, count:4, msg:"<code>EnQueue(61)</code> — Tail: 2→3. Queue[3]=61. Count: 4" },
+  { line:36, items:[15,32,8,61,27], head:0, tail:4, count:5, msg:"<code>EnQueue(27)</code> — Tail: 3→4. Queue[4]=27. Count: 5" },
+  { line:38, items:[32,8,61,27], head:1, tail:4, count:4, msg:"<code>DeQueue()</code> — item = Queue[0] = 15. Head: 0→1. Count: 4. Returns 15" },
+  { line:39, items:[8,61,27], head:2, tail:4, count:3, msg:"<code>DeQueue()</code> — item = Queue[1] = 32. Head: 1→2. Count: 3. Returns 32" },
 ];
 
 let qState = { prevLine: null };
 function resetQueue() {
   qState = { prevLine: null };
   renderCode('queue-code', queueCode);
-  renderQueueDiagram([]);
+  renderQueueDiagram([], -1, -1, 0);
   queueCalloutEl.innerHTML = 'Press <strong>Step →</strong> to begin';
 }
 renderCode('queue-code', queueCode);
-renderQueueDiagram([]);
+renderQueueDiagram([], -1, -1, 0);
 makeController(
   document.getElementById('queue-step'), document.getElementById('queue-reset'),
   document.getElementById('queue-auto'), document.getElementById('queue-step-num'),
@@ -412,7 +490,7 @@ makeController(
     const s = queueSteps[i];
     highlightLine('queue-code', s.line, qState.prevLine);
     qState.prevLine = s.line;
-    renderQueueDiagram(s.items);
+    renderQueueDiagram(s.items, s.head, s.tail, s.count);
     queueCalloutEl.innerHTML = s.msg;
   }, resetQueue
 );
