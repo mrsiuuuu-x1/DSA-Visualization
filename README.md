@@ -1,59 +1,82 @@
-# DSAvis — Data Structure Visualizer
+# DSAVis — Data Structure Visualizer
 
-An interactive, browser-based visualizer for learning data structures through **step-by-step code execution** and **animated diagrams** — all in Python.
+An interactive, browser-based visualizer for learning data structures through **step-by-step code execution** and **live animated diagrams** — all in Python.
 
-![DSAvis Preview](https://img.shields.io/badge/status-ready-brightgreen) ![License](https://img.shields.io/badge/license-MIT-blue)
+![Status](https://img.shields.io/badge/status-live-brightgreen) ![License](https://img.shields.io/badge/license-MIT-blue)
+
+🔗 **Live Site:** [mrsiuuuu-x1.github.io/DSA-Visualization](https://mrsiuuuu-x1.github.io/DSA-Visualization)
+
+---
 
 ## Data Structures Covered
 
-| Section | Structures |
+| Section | Implementation |
 |---|---|
-| **Arrays & Linked Lists** | Python lists, singly linked list |
-| **Stacks & Queues** | Stack (LIFO), Queue with `deque` (FIFO) |
-| **Trees & Graphs** | Binary Search Tree insertion, BFS traversal |
+| **Array** | Python list — append, access by index, pop, insert |
+| **Linked List** | Singly linked list with Node class and next pointers |
+| **Stack** | Array-based stack using `TopOfStack` integer pointer |
+| **Queue** | Array-based queue using `HeadPointer`, `TailPointer`, `NumberItems` |
+| **Binary Search Tree** | Array-based BST with private attributes, getters/setters, index pointers |
+
+---
 
 ## Features
 
 - **Step-by-step execution** — walk through each line of Python code one at a time
-- **Live diagrams** — watch the data structure change as each operation runs
-- **Auto-play mode** — sit back and watch the animation
-- **Explanatory callouts** — every step has a plain-English explanation
-- **Syntax highlighting** — clean, readable Python code display
-- **Tab switching** — toggle between related structures (e.g. Stack ↔ Queue)
+- **Live diagrams** — watch the data structure update as each operation runs
+- **Explanatory callouts** — every step has a plain-English explanation of what's happening
+- **Auto-play mode** — step through automatically at a set interval
+- **Syntax highlighting** — clean, readable Python code with colour-coded keywords
+- **5 dedicated sections** — each data structure has its own independent page and controls
+- **BST array table** — visualizes the underlying `__Tree` array alongside the tree diagram
+- **Stack & Queue pointer display** — shows `TopOfStack`, `HeadPointer`, `TailPointer` updating live
+
+---
 
 ## Getting Started
 
 No install needed. Just open `index.html` in any modern browser.
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/dsavis.git
-cd dsavis
-open index.html   # or double-click it
+git clone https://github.com/mrsiuuuu-x1/DSA-Visualization.git
+cd DSA-Visualization
+# open index.html in your browser
 ```
+
+Or visit the live site directly — no setup required.
+
+---
 
 ## File Structure
 
 ```
-dsavis/
-├── index.html   # Main HTML structure
-├── style.css    # All styles (dark theme, animations)
-├── app.js       # All visualizer logic
-└── README.md    # This file
+DSA-Visualization/
+├── index.html   # HTML structure — 5 sections, one per data structure
+├── style.css    # Dark theme, animations, responsive layout
+├── app.js       # All visualizer logic, step definitions, diagram rendering
+└── README.md
 ```
+
+---
 
 ## Tech Stack
 
 - Vanilla HTML, CSS, JavaScript — zero dependencies, zero build step
-- SVG for tree/graph rendering
-- Google Fonts (JetBrains Mono + Syne)
+- SVG for Binary Search Tree rendering
+- Google Fonts: JetBrains Mono + Syne
+- Hosted via GitHub Pages
+
+---
 
 ## Roadmap
 
 - [ ] Hash Tables
 - [ ] Heap / Priority Queue
-- [ ] Merge Sort / Quick Sort visualizer
-- [ ] User-input mode (insert your own values)
+- [ ] Sorting algorithms (Merge Sort, Quick Sort)
+- [ ] User-input mode — insert your own values
 - [ ] Light theme toggle
+
+---
 
 ## License
 
