@@ -16,7 +16,7 @@ An interactive, browser-based visualizer for learning data structures through **
 | **Linked List** | Singly linked list with Node class and next pointers |
 | **Stack** | Array-based stack using `TopOfStack` integer pointer |
 | **Queue** | Array-based queue using `HeadPointer`, `TailPointer`, `NumberItems` |
-| **Binary Search Tree** | Array-based BST with private attributes, getters/setters, index pointers |
+| **Binary Tree** | Array-based BT with private attributes, getters/setters, index pointers |
 
 ---
 
