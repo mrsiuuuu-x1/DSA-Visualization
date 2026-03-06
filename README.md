@@ -28,7 +28,7 @@ An interactive, browser-based visualizer for learning data structures through **
 - **Auto-play mode** — step through automatically at a set interval
 - **Syntax highlighting** — clean, readable Python code with colour-coded keywords
 - **5 dedicated sections** — each data structure has its own independent page and controls
-- **BST array table** — visualizes the underlying `__Tree` array alongside the tree diagram
+- **BT array table** — visualizes the underlying `__Tree` array alongside the tree diagram
 - **Stack & Queue pointer display** — shows `TopOfStack`, `HeadPointer`, `TailPointer` updating live
 
 ---
@@ -62,7 +62,7 @@ DSA-Visualization/
 ## Tech Stack
 
 - Vanilla HTML, CSS, JavaScript — zero dependencies, zero build step
-- SVG for Binary Search Tree rendering
+- SVG for Binary Tree rendering
 - Google Fonts: JetBrains Mono + Syne
 - Hosted via GitHub Pages
 
@@ -70,11 +70,11 @@ DSA-Visualization/
 
 ## Roadmap
 
-- [ ] Hash Tables
-- [ ] Heap / Priority Queue
-- [ ] Sorting algorithms (Merge Sort, Quick Sort)
+- [ ] Sorting algorithms (Insertion Sort, Bubble Sort)
 - [ ] User-input mode — insert your own values
 - [ ] Light theme toggle
+- [ ] Hash Tables
+- [ ] Heap / Priority Queue
 
 ---
 
