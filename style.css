@@ -17,7 +17,7 @@
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-html { scroll-behavior: smooth; }
+html { scroll-behavior: smooth; height: 100%; }
 
 body {
   background: var(--bg);
@@ -26,6 +26,8 @@ body {
   min-height: 100vh;
   overflow-x: hidden;
   position: relative;
+  display: flex;
+  flex-direction: column;
 }
 
 .noise {
@@ -103,7 +105,7 @@ nav {
 }
 
 /* ── Main ─────────────────────────────────────── */
-main { position: relative; z-index: 1; }
+main { position: relative; z-index: 1; flex: 1; }
 
 .section { display: none; padding: 2.5rem 2rem 3rem; max-width: 1200px; margin: 0 auto; }
 .section.active { display: block; animation: fadeUp .4s ease; }
