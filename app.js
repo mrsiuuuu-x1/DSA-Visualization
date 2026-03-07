@@ -585,6 +585,8 @@ function computePositions(treeArr, rootIdx, W) {
   if (rootIdx < 0 || treeArr.length === 0) return positions;
   const YGAP = 72, startY = 40;
   function place(idx, x, y, spread) {
+    if (idx < 0 || idx >= treeArr.length || !treeArr[idx]) return;
+    if (positions[idx]) return;          // prevent infinite loops on bad data
     positions[idx] = { x, y };
     const n = treeArr[idx];
     if (n.left !== -1) place(n.left, x - spread, y + YGAP, spread / 2);
@@ -891,19 +893,29 @@ async function runVisualize(userCode, diagramEl, calloutEl, statusEl, renderFn) 
   out.push('            items.append(_dumps(str(k)) + ": " + _dumps(obj[k]))');
   out.push('        return "{" + ", ".join(items) + "}"');
   out.push('    return _dumps(str(obj))');
+  // Deep-copy helper so nested lists (e.g. tree arrays) are snapshotted by value
+  out.push('def _deepcopy(obj):');
+  out.push('    if isinstance(obj, list):');
+  out.push('        return [_deepcopy(x) for x in obj]');
+  out.push('    if isinstance(obj, dict):');
+  out.push('        r = {}');
+  out.push('        for k in obj:');
+  out.push('            r[k] = _deepcopy(obj[k])');
+  out.push('        return r');
+  out.push('    return obj');
   out.push('_snapshots = []');
   out.push('_labels = []');
 
   for (const line of lines) {
     out.push(line);
     const s = line.trim();
-    if (!s || s.startsWith('#') || /^(def |class |if |elif |else:|for |while |with |try:|except|finally:|return |pass$)/.test(s)) continue;
+    if (!s || s.startsWith('#') || /^(def |class |if |elif |else:|for |while |with |try:|except|finally:|return\b|pass\b|break\b|continue\b)/.test(s)) continue;
     // Get leading whitespace to preserve indentation inside functions/blocks
     const indent = line.match(/^(\s*)/)[0];
     // After each executable line, try to snapshot the target variable
     out.push(
       `${indent}try:\n` +
-      `${indent}  _tmp = list(${varName})\n` +
+      `${indent}  _tmp = _deepcopy(${varName})\n` +
       `${indent}  _snapshots.append(_tmp)\n` +
       `${indent}  _labels.append(${JSON.stringify(s.slice(0, 60))})\n` +
       `${indent}except:\n` +
