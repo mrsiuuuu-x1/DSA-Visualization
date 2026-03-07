@@ -822,8 +822,10 @@ function setupModeToggle(name) {
   });
 }
 setupModeToggle('array');
+setupModeToggle('linkedlist');
 setupModeToggle('stack');
 setupModeToggle('queue');
+setupModeToggle('tree');
 
 // Mark all as ready immediately — Skulpt needs no loading
 document.querySelectorAll('.pyodide-status').forEach(el => {
@@ -1040,6 +1042,126 @@ function renderInteractiveQueue(diagramEl, snap, varName) {
   }
 }
 
+function renderInteractiveLinkedList(diagramEl, snap) {
+  diagramEl.innerHTML = '';
+  const filled = snap.filter(v => v !== null && v !== '' && v !== -1);
+  if (filled.length === 0) {
+    diagramEl.innerHTML = '<span class="diagram-placeholder">head → None</span>';
+    return;
+  }
+  const cont = document.createElement('div');
+  cont.className = 'll-container';
+  filled.forEach((val, i) => {
+    const node = document.createElement('div');
+    node.className = 'll-node';
+    const isLast = i === filled.length - 1;
+    node.innerHTML = `
+      <div class="ll-cell">
+        <div class="ll-val">${val}</div>
+        <div class="ll-ptr">${isLast ? 'None' : '→'}</div>
+      </div>
+      ${!isLast ? '<div class="ll-arrow">→</div>' : ''}`;
+    cont.appendChild(node);
+  });
+  diagramEl.appendChild(cont);
+}
+
+function renderInteractiveTree(diagramEl, snap, varName) {
+  diagramEl.innerHTML = '';
+  // snap is the raw tree array: each element is [left, data, right]
+  // Filter to only valid nodes (not [-1, -1, -1])
+  const treeArr = [];
+  for (let i = 0; i < snap.length; i++) {
+    const item = snap[i];
+    if (Array.isArray(item) && !(item[0] === -1 && item[1] === -1 && item[2] === -1)) {
+      treeArr.push({ data: item[1], left: item[0], right: item[2] });
+    } else {
+      break; // stop at first unused slot
+    }
+  }
+
+  if (treeArr.length === 0) {
+    diagramEl.innerHTML = '<span class="diagram-placeholder">[ empty tree ]</span>';
+    return;
+  }
+
+  // SVG tree visualization
+  const svgNS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(svgNS, 'svg');
+  svg.setAttribute('width', '100%');
+  svg.setAttribute('height', '240');
+  svg.style.overflow = 'visible';
+
+  const W = diagramEl.clientWidth || 480;
+  const positions = computePositions(treeArr, 0, W);
+
+  // Draw edges
+  treeArr.forEach((n, i) => {
+    [[n.left, 'left'], [n.right, 'right']].forEach(([childIdx]) => {
+      if (childIdx === -1) return;
+      const p = positions[i], c = positions[childIdx];
+      if (!p || !c) return;
+      const line = document.createElementNS(svgNS, 'line');
+      line.setAttribute('x1', p.x); line.setAttribute('y1', p.y);
+      line.setAttribute('x2', c.x); line.setAttribute('y2', c.y);
+      line.setAttribute('class', 'tree-edge');
+      svg.appendChild(line);
+    });
+  });
+
+  // Draw nodes
+  treeArr.forEach((n, i) => {
+    const pos = positions[i];
+    if (!pos) return;
+    const g = document.createElementNS(svgNS, 'g');
+    const circle = document.createElementNS(svgNS, 'circle');
+    circle.setAttribute('cx', pos.x); circle.setAttribute('cy', pos.y); circle.setAttribute('r', 22);
+    circle.setAttribute('class', 'tree-circle');
+    const text = document.createElementNS(svgNS, 'text');
+    text.setAttribute('x', pos.x); text.setAttribute('y', pos.y);
+    text.setAttribute('class', 'tree-text'); text.textContent = n.data;
+    const idxLabel = document.createElementNS(svgNS, 'text');
+    idxLabel.setAttribute('x', pos.x); idxLabel.setAttribute('y', pos.y - 28);
+    idxLabel.setAttribute('class', 'tree-text');
+    idxLabel.style.fontSize = '10px'; idxLabel.style.fill = 'var(--text-dim)';
+    idxLabel.textContent = '[' + i + ']';
+    g.appendChild(circle); g.appendChild(text); g.appendChild(idxLabel);
+    svg.appendChild(g);
+  });
+
+  diagramEl.appendChild(svg);
+
+  // Array table below SVG
+  const table = document.createElement('div');
+  table.style.cssText = 'display:flex;flex-direction:column;gap:4px;margin-top:8px;width:100%;overflow-x:auto;';
+
+  const header = document.createElement('div');
+  header.style.cssText = 'display:flex;gap:2px;font-family:var(--mono);font-size:.65rem;color:var(--text-dim);';
+  header.innerHTML = '<div style="width:32px;text-align:center">idx</div>'
+    + treeArr.map((_, i) => `<div style="width:44px;text-align:center">[${i}]</div>`).join('');
+  table.appendChild(header);
+
+  const leftRow = document.createElement('div');
+  leftRow.style.cssText = 'display:flex;gap:2px;font-family:var(--mono);font-size:.7rem;';
+  leftRow.innerHTML = '<div style="width:32px;text-align:right;color:var(--text-dim);padding-right:4px">L</div>'
+    + treeArr.map(n => `<div style="width:44px;text-align:center;padding:3px 0;background:var(--surface2);border-radius:4px;border:1px solid var(--border);color:var(--text-dim)">${n.left}</div>`).join('');
+  table.appendChild(leftRow);
+
+  const dataRow = document.createElement('div');
+  dataRow.style.cssText = 'display:flex;gap:2px;font-family:var(--mono);font-size:.75rem;font-weight:700;';
+  dataRow.innerHTML = '<div style="width:32px;text-align:right;color:var(--text-dim);padding-right:4px">D</div>'
+    + treeArr.map(n => `<div style="width:44px;text-align:center;padding:4px 0;background:var(--surface2);border-radius:4px;border:1px solid var(--border);color:var(--text)">${n.data}</div>`).join('');
+  table.appendChild(dataRow);
+
+  const rightRow = document.createElement('div');
+  rightRow.style.cssText = 'display:flex;gap:2px;font-family:var(--mono);font-size:.7rem;';
+  rightRow.innerHTML = '<div style="width:32px;text-align:right;color:var(--text-dim);padding-right:4px">R</div>'
+    + treeArr.map(n => `<div style="width:44px;text-align:center;padding:3px 0;background:var(--surface2);border-radius:4px;border:1px solid var(--border);color:var(--text-dim)">${n.right}</div>`).join('');
+  table.appendChild(rightRow);
+
+  diagramEl.appendChild(table);
+}
+
 // ── Wire up Run buttons ───────────────────────────────────────
 document.getElementById('array-run').addEventListener('click', () => {
   runVisualize(
@@ -1068,6 +1190,26 @@ document.getElementById('queue-run').addEventListener('click', () => {
     document.getElementById('queue-interactive-callout'),
     document.getElementById('queue-py-status'),
     renderInteractiveQueue
+  );
+});
+
+document.getElementById('linkedlist-run').addEventListener('click', () => {
+  runVisualize(
+    document.getElementById('linkedlist-editor').value,
+    document.getElementById('linkedlist-interactive-diagram'),
+    document.getElementById('linkedlist-interactive-callout'),
+    document.getElementById('linkedlist-py-status'),
+    renderInteractiveLinkedList
+  );
+});
+
+document.getElementById('tree-run').addEventListener('click', () => {
+  runVisualize(
+    document.getElementById('tree-editor').value,
+    document.getElementById('tree-interactive-diagram'),
+    document.getElementById('tree-interactive-callout'),
+    document.getElementById('tree-py-status'),
+    renderInteractiveTree
   );
 });
 

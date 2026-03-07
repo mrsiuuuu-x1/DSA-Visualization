@@ -101,22 +101,61 @@ arr.insert(1, 99)
       <h1>Linked List</h1>
       <p class="subtitle">See how nodes are chained together with <strong>next</strong> pointers — step through each append operation.</p>
     </div>
-    <div class="viz-layout">
-      <div class="code-panel">
-        <div class="panel-label">Python Code</div>
-        <pre class="code-block" id="linked-code"></pre>
+    <div class="mode-toggle-row">
+      <button class="mode-toggle-btn" id="linkedlist-mode-toggle">⚡ Interactive Mode</button>
+    </div>
+
+    <!-- Step Mode -->
+    <div id="linkedlist-step-mode">
+      <div class="viz-layout">
+        <div class="code-panel">
+          <div class="panel-label">Python Code</div>
+          <pre class="code-block" id="linked-code"></pre>
+        </div>
+        <div class="diagram-panel">
+          <div class="panel-label">Visualization</div>
+          <div class="diagram-area" id="linked-diagram"></div>
+          <div class="callout" id="linked-callout">Press <strong>Step →</strong> to begin</div>
+        </div>
       </div>
-      <div class="diagram-panel">
-        <div class="panel-label">Visualization</div>
-        <div class="diagram-area" id="linked-diagram"></div>
-        <div class="callout" id="linked-callout">Press <strong>Step →</strong> to begin</div>
+      <div class="controls">
+        <button class="ctrl-btn secondary" id="linked-reset">↺ Reset</button>
+        <button class="ctrl-btn" id="linked-step">Step →</button>
+        <button class="ctrl-btn secondary" id="linked-auto">▶ Auto</button>
+        <div class="step-counter">Step <span id="linked-step-num">0</span> / <span id="linked-step-total">0</span></div>
       </div>
     </div>
-    <div class="controls">
-      <button class="ctrl-btn secondary" id="linked-reset">↺ Reset</button>
-      <button class="ctrl-btn" id="linked-step">Step →</button>
-      <button class="ctrl-btn secondary" id="linked-auto">▶ Auto</button>
-      <div class="step-counter">Step <span id="linked-step-num">0</span> / <span id="linked-step-total">0</span></div>
+
+    <!-- Interactive Mode -->
+    <div id="linkedlist-interactive-mode" class="interactive-mode hidden">
+      <div class="viz-layout">
+        <div class="code-panel">
+          <div class="panel-label">Your Python Code
+            <span class="panel-hint">Write any Python — add <code># @visualize varName</code> to watch a variable</span>
+          </div>
+          <textarea class="code-editor" id="linkedlist-editor" aria-label="Linked List code editor" title="Linked List code editor" spellcheck="false">ll = []
+
+ll.append(10)
+ll.append(20)
+ll.append(30)
+ll.append(40)
+ll.pop()
+ll.insert(1, 99)
+
+# @visualize ll</textarea>
+          <div class="editor-controls">
+            <button class="run-btn" id="linkedlist-run">▶ Run</button>
+            <span class="pyodide-status" id="linkedlist-py-status">Loading Python...</span>
+          </div>
+        </div>
+        <div class="diagram-panel">
+          <div class="panel-label">Visualization</div>
+          <div class="diagram-area" id="linkedlist-interactive-diagram">
+            <span class="diagram-placeholder">Press Run to visualize</span>
+          </div>
+          <div class="callout" id="linkedlist-interactive-callout">Write your code and press <strong>Run</strong></div>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -297,24 +336,90 @@ DeQueue()
       <h1>Binary Tree</h1>
       <p class="subtitle">Array-based BT using index pointers — step through each insertion and watch the tree and array table update live.</p>
     </div>
-    <div class="viz-layout">
-      <div class="code-panel">
-        <div class="panel-label">Python Code</div>
-        <pre class="code-block" id="tree-code"></pre>
-      </div>
-      <div class="diagram-panel">
-        <div class="panel-label">Visualization</div>
-        <div class="diagram-area" id="tree-diagram">
-          <svg id="tree-svg" width="100%" height="240"></svg>
+    <div class="mode-toggle-row">
+      <button class="mode-toggle-btn" id="tree-mode-toggle">⚡ Interactive Mode</button>
+    </div>
+
+    <!-- Step Mode -->
+    <div id="tree-step-mode">
+      <div class="viz-layout">
+        <div class="code-panel">
+          <div class="panel-label">Python Code</div>
+          <pre class="code-block" id="tree-code"></pre>
         </div>
-        <div class="callout" id="tree-callout">Press <strong>Step →</strong> to begin</div>
+        <div class="diagram-panel">
+          <div class="panel-label">Visualization</div>
+          <div class="diagram-area" id="tree-diagram">
+            <svg id="tree-svg" width="100%" height="240"></svg>
+          </div>
+          <div class="callout" id="tree-callout">Press <strong>Step →</strong> to begin</div>
+        </div>
+      </div>
+      <div class="controls">
+        <button class="ctrl-btn secondary" id="tree-reset">↺ Reset</button>
+        <button class="ctrl-btn" id="tree-step">Step →</button>
+        <button class="ctrl-btn secondary" id="tree-auto">▶ Auto</button>
+        <div class="step-counter">Step <span id="tree-step-num">0</span> / <span id="tree-step-total">0</span></div>
       </div>
     </div>
-    <div class="controls">
-      <button class="ctrl-btn secondary" id="tree-reset">↺ Reset</button>
-      <button class="ctrl-btn" id="tree-step">Step →</button>
-      <button class="ctrl-btn secondary" id="tree-auto">▶ Auto</button>
-      <div class="step-counter">Step <span id="tree-step-num">0</span> / <span id="tree-step-total">0</span></div>
+
+    <!-- Interactive Mode -->
+    <div id="tree-interactive-mode" class="interactive-mode hidden">
+      <div class="viz-layout">
+        <div class="code-panel">
+          <div class="panel-label">Your Python Code
+            <span class="panel-hint">Write any Python — add <code># @visualize varName</code> to watch a list of [left, data, right] triples</span>
+          </div>
+          <textarea class="code-editor" id="tree-editor" aria-label="Binary Tree code editor" title="Binary Tree code editor" spellcheck="false">Tree = [[-1, -1, -1] for x in range(20)]
+RootPointer = -1
+NextFree = 0
+
+def Insert(val):
+    global Tree, RootPointer, NextFree
+    Tree[NextFree] = [-1, val, -1]
+    if RootPointer == -1:
+        RootPointer = 0
+        NextFree += 1
+        return
+    current = RootPointer
+    while True:
+        if val < Tree[current][1]:
+            if Tree[current][0] == -1:
+                Tree[current][0] = NextFree
+                NextFree += 1
+                break
+            else:
+                current = Tree[current][0]
+        else:
+            if Tree[current][2] == -1:
+                Tree[current][2] = NextFree
+                NextFree += 1
+                break
+            else:
+                current = Tree[current][2]
+
+Insert(10)
+Insert(5)
+Insert(15)
+Insert(3)
+Insert(7)
+Insert(12)
+Insert(20)
+
+# @visualize Tree</textarea>
+          <div class="editor-controls">
+            <button class="run-btn" id="tree-run">▶ Run</button>
+            <span class="pyodide-status" id="tree-py-status">Loading Python...</span>
+          </div>
+        </div>
+        <div class="diagram-panel">
+          <div class="panel-label">Visualization</div>
+          <div class="diagram-area" id="tree-interactive-diagram">
+            <span class="diagram-placeholder">Press Run to visualize</span>
+          </div>
+          <div class="callout" id="tree-interactive-callout">Write your code and press <strong>Run</strong></div>
+        </div>
+      </div>
     </div>
   </section>
 
