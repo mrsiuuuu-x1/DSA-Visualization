@@ -66,15 +66,18 @@
       <div class="viz-layout">
         <div class="code-panel">
           <div class="panel-label">Your Python Code
-            <span class="panel-hint">Edit and run — use a list called <code>arr</code></span>
+            <span class="panel-hint">Write any Python — add <code># @visualize varName</code> to watch a variable</span>
           </div>
           <textarea class="code-editor" id="array-editor" aria-label="Array code editor" title="Array code editor" spellcheck="false">arr = []
+
 arr.append(5)
 arr.append(12)
 arr.append(3)
 arr.append(8)
 arr.pop()
-arr.insert(1, 99)</textarea>
+arr.insert(1, 99)
+
+# @visualize arr</textarea>
           <div class="editor-controls">
             <button class="run-btn" id="array-run">▶ Run</button>
             <span class="pyodide-status" id="array-py-status">Loading Python...</span>
@@ -152,15 +155,37 @@ arr.insert(1, 99)</textarea>
       <div class="viz-layout">
         <div class="code-panel">
           <div class="panel-label">Your Python Code
-            <span class="panel-hint">Use <code>Push(val)</code> and <code>Pop()</code></span>
+            <span class="panel-hint">Write any Python — add <code># @visualize varName</code> to watch a variable</span>
           </div>
-          <textarea class="code-editor" id="stack-editor" aria-label="Stack code editor" title="Stack code editor" spellcheck="false">Push(10)
+          <textarea class="code-editor" id="stack-editor" aria-label="Stack code editor" title="Stack code editor" spellcheck="false">Stack = [-1] * 30
+TopOfStack = -1
+
+def Push(item):
+    global Stack, TopOfStack
+    if TopOfStack > 29:
+        print("Stack is full")
+        return False
+    TopOfStack += 1
+    Stack[TopOfStack] = item
+    return True
+
+def Pop():
+    global Stack, TopOfStack
+    if TopOfStack == -1:
+        print("Stack is empty")
+        return -999
+    item = Stack[TopOfStack]
+    TopOfStack -= 1
+    return item
+
+Push(10)
 Push(25)
 Push(7)
 Pop()
-Push(99)
+Push(43)
 Pop()
-Pop()</textarea>
+
+# @visualize Stack</textarea>
           <div class="editor-controls">
             <button class="run-btn" id="stack-run">▶ Run</button>
             <span class="pyodide-status" id="stack-py-status">Loading Python...</span>
@@ -213,15 +238,42 @@ Pop()</textarea>
       <div class="viz-layout">
         <div class="code-panel">
           <div class="panel-label">Your Python Code
-            <span class="panel-hint">Use <code>EnQueue(val)</code> and <code>DeQueue()</code></span>
+            <span class="panel-hint">Write any Python — add <code># @visualize varName</code> to watch a variable</span>
           </div>
-          <textarea class="code-editor" id="queue-editor" aria-label="Queue code editor" title="Queue code editor" spellcheck="false">EnQueue(15)
+          <textarea class="code-editor" id="queue-editor" aria-label="Queue code editor" title="Queue code editor" spellcheck="false">Queue = [""] * 100
+HeadPointer = -1
+TailPointer = -1
+NumberItems = 0
+
+def EnQueue(val):
+    global Queue, HeadPointer, TailPointer, NumberItems
+    if NumberItems == 0:
+        HeadPointer = 0
+        TailPointer = 0
+    else:
+        TailPointer += 1
+    Queue[TailPointer] = val
+    NumberItems += 1
+
+def DeQueue():
+    global Queue, HeadPointer, TailPointer, NumberItems
+    item = Queue[HeadPointer]
+    NumberItems -= 1
+    if NumberItems == 0:
+        HeadPointer = -1
+        TailPointer = -1
+    else:
+        HeadPointer += 1
+    return item
+
+EnQueue(15)
 EnQueue(32)
 EnQueue(8)
 DeQueue()
 EnQueue(61)
 DeQueue()
-DeQueue()</textarea>
+
+# @visualize Queue</textarea>
           <div class="editor-controls">
             <button class="run-btn" id="queue-run">▶ Run</button>
             <span class="pyodide-status" id="queue-py-status">Loading Python...</span>

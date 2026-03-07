@@ -798,14 +798,14 @@ makeController(
 document.getElementById('tree-step-total').textContent = btSteps.length;
 
 
+
 // ══════════════════════════════════════════════════════════════
-//  INTERACTIVE MODE — Pyodide Python Execution
+//  INTERACTIVE MODE — Pyodide + @visualize tag
 // ══════════════════════════════════════════════════════════════
 
 let pyodide = null;
 let pyodideReady = false;
 
-// Load Pyodide once, shared across all interactive sections
 async function initPyodide() {
   try {
     pyodide = await loadPyodide();
@@ -822,361 +822,232 @@ async function initPyodide() {
     });
   }
 }
-
-// Disable run buttons until Pyodide is ready
 document.querySelectorAll('.run-btn').forEach(btn => btn.disabled = true);
 initPyodide();
 
-// ── Mode toggle logic ────────────────────────────────────────
+// ── Mode toggle ───────────────────────────────────────────────
 function setupModeToggle(name) {
-  const btn = document.getElementById(`${name}-mode-toggle`);
-  const stepDiv = document.getElementById(`${name}-step-mode`);
-  const interactiveDiv = document.getElementById(`${name}-interactive-mode`);
-  let interactive = false;
-
+  const btn          = document.getElementById(`${name}-mode-toggle`);
+  const stepDiv      = document.getElementById(`${name}-step-mode`);
+  const interactDiv  = document.getElementById(`${name}-interactive-mode`);
+  let interactive    = false;
   btn.addEventListener('click', () => {
     interactive = !interactive;
     btn.classList.toggle('active', interactive);
     btn.textContent = interactive ? '📖 Step Mode' : '⚡ Interactive Mode';
     stepDiv.style.display = interactive ? 'none' : 'block';
-    interactiveDiv.classList.toggle('hidden', !interactive);
+    interactDiv.classList.toggle('hidden', !interactive);
   });
 }
-
 setupModeToggle('array');
 setupModeToggle('stack');
 setupModeToggle('queue');
 
-// ── Python runner ────────────────────────────────────────────
-async function runPython(code, scaffold) {
-  if (!pyodideReady) return null;
+// ── Core runner — @visualize tag approach ─────────────────────
+// Parses "# @visualize VarName" from user code, instruments each
+// executable line to snapshot that variable, then animates results.
+async function runVisualize(userCode, diagramEl, calloutEl, statusEl, renderFn) {
+  if (!pyodideReady) {
+    calloutEl.innerHTML = '<span style="color:#ff5a5a">Python is still loading, please wait...</span>';
+    return;
+  }
+
+  // 1. Extract @visualize variable name
+  const tagMatch = userCode.match(/#\s*@visualize\s+(\w+)/);
+  if (!tagMatch) {
+    calloutEl.innerHTML = `<span style="color:#ff5a5a">Add <code># @visualize YourVarName</code> anywhere in your code to mark what to watch.</span>`;
+    return;
+  }
+  const varName = tagMatch[1];
+
+  // 2. Build instrumented code — after every non-empty, non-comment line
+  //    inject a snapshot of the watched variable
+  const lines = userCode.split('\n');
+  const instrumented = [];
+  instrumented.push('_snapshots = []');
+  instrumented.push('_labels = []');
+
+  // Detect indentation so we only snapshot at top-level statements
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    instrumented.push(line);
+    const stripped = line.trim();
+    // Skip blank lines, comments, def/class declarations, else/elif/except/finally
+    if (!stripped || stripped.startsWith('#') ||
+        /^(def |class |else:|elif |except|finally:)/.test(stripped)) continue;
+    // Only snapshot after top-level lines (no leading spaces for simple cases,
+    // but also after indented lines so we catch function bodies)
+    instrumented.push(
+      `try:\n` +
+      `    _v = ${varName}[:] if hasattr(${varName},'__getitem__') else list(${varName})\n` +
+      `    _snapshots.append(list(_v))\n` +
+      `    _labels.append(${JSON.stringify(stripped.slice(0, 60))})\n` +
+      `except: pass`
+    );
+  }
+
+  statusEl.textContent = 'Running...';
+  statusEl.className = 'pyodide-status';
+
   try {
-    await pyodide.runPythonAsync(`_events = []`);
-    const full = scaffold + '\n' + code;
-    await pyodide.runPythonAsync(full);
-    // Convert Python list of tuples to JS arrays
-    const raw = pyodide.globals.get('_events');
-    const events = raw.toJs({ dict_converter: Object.fromEntries });
-    // Each event is a Map or Array — normalize to plain arrays
-    const normalized = [];
-    for (const e of events) {
-      if (Array.isArray(e)) {
-        normalized.push(e.map(v => (v && v.toJs) ? v.toJs() : v));
-      } else {
-        normalized.push(e);
+    await pyodide.runPythonAsync('_snapshots = []\n_labels = []');
+    await pyodide.runPythonAsync(instrumented.join('\n'));
+
+    const rawSnaps  = pyodide.globals.get('_snapshots').toJs();
+    const rawLabels = pyodide.globals.get('_labels').toJs();
+
+    // Deduplicate consecutive identical snapshots
+    const steps = [];
+    let prev = null;
+    for (let i = 0; i < rawSnaps.length; i++) {
+      const snap = Array.isArray(rawSnaps[i]) ? rawSnaps[i] : Array.from(rawSnaps[i]);
+      const label = rawLabels[i];
+      const key = JSON.stringify(snap);
+      if (key !== prev) {
+        steps.push({ snap, label });
+        prev = key;
       }
     }
-    return { events: normalized, error: null };
+
+    if (steps.length === 0) {
+      calloutEl.innerHTML = `<span style="color:#ff5a5a">No changes detected on <code>${varName}</code>. Check your variable name.</span>`;
+      statusEl.textContent = '✓ Python ready';
+      statusEl.classList.add('ready');
+      return;
+    }
+
+    statusEl.textContent = '✓ Python ready';
+    statusEl.classList.add('ready');
+
+    // Animate
+    let i = 0;
+    function play() {
+      if (i >= steps.length) {
+        calloutEl.innerHTML = `✅ Done — <strong>${varName}</strong> has ${steps[steps.length-1].snap.length} item(s)`;
+        return;
+      }
+      const { snap, label } = steps[i];
+      renderFn(diagramEl, snap, varName, label);
+      calloutEl.innerHTML = `<code>${label}</code>`;
+      i++;
+      setTimeout(play, 750);
+    }
+    play();
+
   } catch (e) {
-    return { events: [], error: e.message };
+    statusEl.textContent = '✗ Error';
+    statusEl.classList.add('error');
+    calloutEl.innerHTML = `<span style="color:#ff5a5a">Error: ${e.message.split('\n').pop()}</span>`;
   }
 }
 
-// ── ARRAY interactive ────────────────────────────────────────
-const arrayScaffold = `
-class TrackedList(list):
-    def append(self, v):
-        super().append(v)
-        _events.append(('append', list(self), len(self)-1))
-    def pop(self, idx=-1):
-        v = super().pop(idx)
-        _events.append(('pop', list(self), -1))
-        return v
-    def insert(self, idx, v):
-        super().insert(idx, v)
-        _events.append(('insert', list(self), idx))
+// ── Render helpers ────────────────────────────────────────────
 
-arr = TrackedList()
-_events.append(('init', [], -1))
-# --- user code below (arr = [] lines are ignored, arr is already tracked) ---
-`;
-
-document.getElementById('array-run').addEventListener('click', async () => {
-  const rawCode = document.getElementById('array-editor').value;
-  // Strip arr = [] since arr is already a TrackedList from the scaffold
-  const code = rawCode.split('\n').filter(l => !/^\s*arr\s*=\s*\[\s*\]/.test(l)).join('\n');
-  const statusEl = document.getElementById('array-py-status');
-  const diagramEl = document.getElementById('array-interactive-diagram');
-  const calloutEl = document.getElementById('array-interactive-callout');
-
-  statusEl.textContent = 'Running...';
-  statusEl.className = 'pyodide-status';
-
-  const result = await runPython(code, arrayScaffold);
-
-  if (!result || result.error) {
-    statusEl.textContent = '✗ Error';
-    statusEl.classList.add('error');
-    const msg = result ? result.error.split('\n').pop() : 'Python not ready';
-    calloutEl.innerHTML = `<span style="color:#ff5a5a">Error: ${msg}</span>`;
-    return;
-  }
-
-  statusEl.textContent = '✓ Python ready';
-  statusEl.classList.add('ready');
-
-  let step = 0;
+function renderInteractiveArray(diagramEl, snap) {
   diagramEl.innerHTML = '';
-  calloutEl.innerHTML = 'Running...';
-
-  function playStep() {
-    if (step >= result.events.length) return;
-    const ev  = result.events[step];
-    const op  = ev[0];
-    const arr = Array.isArray(ev[1]) ? ev[1] : Array.from(ev[1] || []);
-    const hl  = ev[2];
-
-    diagramEl.innerHTML = '';
-    if (arr.length === 0) {
-      diagramEl.innerHTML = '<span class="diagram-placeholder">[ empty ]</span>';
-    } else {
-      const row = document.createElement('div');
-      row.style.cssText = 'display:flex;gap:.5rem;flex-wrap:wrap;justify-content:center;';
-      arr.forEach((val, i) => {
-        const box = document.createElement('div');
-        box.className = 'arr-box';
-        box.innerHTML = `<div class="arr-cell ${i===hl?'highlight':''}">${val}</div><div class="arr-idx">[${i}]</div>`;
-        row.appendChild(box);
-      });
-      diagramEl.appendChild(row);
-    }
-
-    const msgs = {
-      init:   'Array initialized as empty list',
-      append: `<code>arr.append(${arr[hl]})</code> — added at index [${hl}]`,
-      pop:    `<code>arr.pop()</code> — removed last element. Length: ${arr.length}`,
-      insert: `<code>arr.insert(${hl}, ${arr[hl]})</code> — inserted at index [${hl}]`,
-    };
-    calloutEl.innerHTML = msgs[op] || op;
-    step++;
-    setTimeout(playStep, 700);
-  }
-  playStep();
-});
-
-// ── STACK interactive ────────────────────────────────────────
-const stackScaffold = `
-_stack = []
-_top = -1
-
-def Push(item):
-    global _stack, _top
-    if _top >= 29:
-        _events.append(('error', list(_stack), _top, item, 'Stack full'))
-        return False
-    _top += 1
-    if len(_stack) <= _top:
-        _stack.append(item)
-    else:
-        _stack[_top] = item
-    _events.append(('push', list(_stack[:_top+1]), _top, item, ''))
-    return True
-
-def Pop():
-    global _stack, _top
-    if _top == -1:
-        _events.append(('error', [], -1, None, 'Stack empty'))
-        return -999
-    val = _stack[_top]
-    _top -= 1
-    _events.append(('pop', list(_stack[:_top+1]), _top, val, ''))
-    return val
-
-_events.append(('init', [], -1, None, ''))
-`;
-
-document.getElementById('stack-run').addEventListener('click', async () => {
-  const code = document.getElementById('stack-editor').value;
-  const statusEl = document.getElementById('stack-py-status');
-  const diagramEl = document.getElementById('stack-interactive-diagram');
-  const calloutEl = document.getElementById('stack-interactive-callout');
-
-  statusEl.textContent = 'Running...';
-  statusEl.className = 'pyodide-status';
-
-  const result = await runPython(code, stackScaffold);
-
-  if (!result || result.error) {
-    statusEl.textContent = '✗ Error';
-    statusEl.classList.add('error');
-    const msg = result ? result.error.split('\n').pop() : 'Python not ready';
-    calloutEl.innerHTML = `<span style="color:#ff5a5a">Error: ${msg}</span>`;
+  if (snap.length === 0) {
+    diagramEl.innerHTML = '<span class="diagram-placeholder">[ empty ]</span>';
     return;
   }
+  const row = document.createElement('div');
+  row.style.cssText = 'display:flex;gap:.5rem;flex-wrap:wrap;justify-content:center;';
+  snap.forEach((val, i) => {
+    const box = document.createElement('div');
+    box.className = 'arr-box';
+    box.innerHTML = `<div class="arr-cell">${val}</div><div class="arr-idx">[${i}]</div>`;
+    row.appendChild(box);
+  });
+  diagramEl.appendChild(row);
+}
 
-  statusEl.textContent = '✓ Python ready';
-  statusEl.classList.add('ready');
-
-  let step = 0;
-
-  function playStep() {
-    if (step >= result.events.length) return;
-    const ev    = result.events[step];
-    const op    = ev[0];
-    const items = Array.isArray(ev[1]) ? ev[1] : Array.from(ev[1] || []);
-    const top   = ev[2];
-    const val   = ev[3];
-    const note  = ev[4];
-
-    // Render stack
-    diagramEl.innerHTML = '';
-    const wrap = document.createElement('div');
-    wrap.style.cssText = 'display:flex;gap:2rem;align-items:center;justify-content:center;width:100%;';
-
-    const left = document.createElement('div');
-    left.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:6px;min-width:100px;';
-
-    if (items.length === 0) {
-      left.innerHTML = '<span style="color:var(--text-dim);font-family:var(--mono);font-size:.8rem">[ empty ]</span>';
-    } else {
-      const lbl = document.createElement('div');
-      lbl.style.cssText = 'font-family:var(--mono);font-size:.65rem;color:var(--accent);margin-bottom:2px;';
-      lbl.textContent = '▲ TOP';
-      left.appendChild(lbl);
-      [...items].reverse().forEach((v, ri) => {
-        const el = document.createElement('div');
-        el.className = 'stack-item' + (ri === 0 ? ' top-item' : '');
-        el.textContent = v;
-        left.appendChild(el);
-      });
-    }
-
-    const right = document.createElement('div');
-    right.style.cssText = 'font-family:var(--mono);font-size:.72rem;display:flex;flex-direction:column;gap:4px;';
-    right.innerHTML = `<div style="color:var(--text-dim)">TopOfStack</div><div style="color:var(--accent);font-size:1rem;font-weight:700;">${top}</div>`;
-
-    wrap.appendChild(left);
-    wrap.appendChild(right);
-    diagramEl.appendChild(wrap);
-
-    const msgs = {
-      init:  'Stack initialized — TopOfStack = -1',
-      push:  `<code>Push(${val})</code> — TopOfStack: ${top-1}→${top}. Stack[${top}] = ${val}`,
-      pop:   `<code>Pop()</code> — returned <strong>${val}</strong>. TopOfStack: ${top+1}→${top}`,
-      error: `<span style="color:#ff5a5a">${note}</span>`,
-    };
-    calloutEl.innerHTML = msgs[op] || op;
-    step++;
-    setTimeout(playStep, 700);
+function renderInteractiveStack(diagramEl, snap, varName) {
+  diagramEl.innerHTML = '';
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'display:flex;gap:2rem;align-items:center;justify-content:center;width:100%;';
+  const left = document.createElement('div');
+  left.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:6px;min-width:100px;';
+  if (snap.length === 0) {
+    left.innerHTML = '<span class="diagram-placeholder">[ empty ]</span>';
+  } else {
+    const lbl = document.createElement('div');
+    lbl.style.cssText = 'font-family:var(--mono);font-size:.65rem;color:var(--accent);margin-bottom:2px;';
+    lbl.textContent = '▲ TOP';
+    left.appendChild(lbl);
+    // Filter out -1 sentinel values (unfilled slots)
+    const filled = snap.filter(v => v !== -1 && v !== '' && v !== null);
+    [...filled].reverse().forEach((v, ri) => {
+      const el = document.createElement('div');
+      el.className = 'stack-item' + (ri === 0 ? ' top-item' : '');
+      el.textContent = v;
+      left.appendChild(el);
+    });
   }
-  playStep();
-});
+  const right = document.createElement('div');
+  right.style.cssText = 'font-family:var(--mono);font-size:.72rem;display:flex;flex-direction:column;gap:4px;';
+  const filled = snap.filter(v => v !== -1 && v !== '' && v !== null);
+  right.innerHTML = `<div style="color:var(--text-dim)">${varName}</div><div style="color:var(--accent);font-size:1rem;font-weight:700;">${filled.length} item(s)</div>`;
+  wrap.appendChild(left);
+  wrap.appendChild(right);
+  diagramEl.appendChild(wrap);
+}
 
-// ── QUEUE interactive ────────────────────────────────────────
-const queueScaffold = `
-_queue = [''] * 100
-_head = -1
-_tail = -1
-_count = 0
-
-def EnQueue(val):
-    global _queue, _head, _tail, _count
-    if _count == 100:
-        _events.append(('error', [], -1, -1, 0, val, 'Queue full'))
-        return False
-    if _count == 0:
-        _head = 0
-        _tail = 0
-    else:
-        _tail += 1
-    _queue[_tail] = val
-    _count += 1
-    visible = [_queue[i] for i in range(_head, _tail+1)]
-    _events.append(('enqueue', visible, _head, _tail, _count, val, ''))
-    return True
-
-def DeQueue():
-    global _queue, _head, _tail, _count
-    if _count == 0:
-        _events.append(('error', [], -1, -1, 0, None, 'Queue empty'))
-        return 'False'
-    item = _queue[_head]
-    _count -= 1
-    if _count == 0:
-        _tail = -1
-        _head = -1
-        visible = []
-    else:
-        _head += 1
-        visible = [_queue[i] for i in range(_head, _tail+1)]
-    _events.append(('dequeue', visible, _head, _tail, _count, item, ''))
-    return item
-
-_events.append(('init', [], -1, -1, 0, None, ''))
-`;
-
-document.getElementById('queue-run').addEventListener('click', async () => {
-  const code = document.getElementById('queue-editor').value;
-  const statusEl = document.getElementById('queue-py-status');
-  const diagramEl = document.getElementById('queue-interactive-diagram');
-  const calloutEl = document.getElementById('queue-interactive-callout');
-
-  statusEl.textContent = 'Running...';
-  statusEl.className = 'pyodide-status';
-
-  const result = await runPython(code, queueScaffold);
-
-  if (!result || result.error) {
-    statusEl.textContent = '✗ Error';
-    statusEl.classList.add('error');
-    const msg = result ? result.error.split('\n').pop() : 'Python not ready';
-    calloutEl.innerHTML = `<span style="color:#ff5a5a">Error: ${msg}</span>`;
-    return;
+function renderInteractiveQueue(diagramEl, snap, varName) {
+  diagramEl.innerHTML = '';
+  const filled = snap.filter(v => v !== '' && v !== null && v !== -1);
+  const top = document.createElement('div');
+  top.style.cssText = 'display:flex;gap:4px;flex-wrap:wrap;justify-content:center;width:100%;';
+  if (filled.length === 0) {
+    top.innerHTML = '<span class="diagram-placeholder">[ empty queue ]</span>';
+  } else {
+    filled.forEach((v, i) => {
+      const el = document.createElement('div');
+      el.className = 'queue-item'
+        + (i === 0 ? ' front-item' : '')
+        + (i === filled.length - 1 ? ' rear-item' : '');
+      el.textContent = v;
+      top.appendChild(el);
+    });
   }
-
-  statusEl.textContent = '✓ Python ready';
-  statusEl.classList.add('ready');
-
-  let step = 0;
-
-  function playStep() {
-    if (step >= result.events.length) return;
-    const ev    = result.events[step];
-    const op    = ev[0];
-    const items = Array.isArray(ev[1]) ? ev[1] : Array.from(ev[1] || []);
-    const head  = ev[2];
-    const tail  = ev[3];
-    const count = ev[4];
-    const val   = ev[5];
-    const note  = ev[6];
-
-    diagramEl.innerHTML = '';
-
-    const top = document.createElement('div');
-    top.style.cssText = 'display:flex;gap:4px;flex-wrap:wrap;justify-content:center;width:100%;';
-
-    if (items.length === 0) {
-      top.innerHTML = '<span style="color:var(--text-dim);font-family:var(--mono);font-size:.8rem">[ empty queue ]</span>';
-    } else {
-      items.forEach((v, i) => {
-        const el = document.createElement('div');
-        el.className = 'queue-item'
-          + (i === 0 ? ' front-item' : '')
-          + (i === items.length - 1 ? ' rear-item' : '');
-        el.textContent = v;
-        top.appendChild(el);
-      });
-    }
-    diagramEl.appendChild(top);
-
+  diagramEl.appendChild(top);
+  if (filled.length > 0) {
     const info = document.createElement('div');
     info.style.cssText = 'display:flex;gap:1.5rem;margin-top:.6rem;font-family:var(--mono);font-size:.72rem;justify-content:center;';
-    info.innerHTML = `
-      <span style="color:var(--accent2)">Head: <strong>${head}</strong></span>
-      <span style="color:var(--accent)">Tail: <strong>${tail}</strong></span>
-      <span style="color:var(--text-dim)">Count: <strong>${count}</strong></span>
-    `;
+    info.innerHTML = `<span style="color:var(--accent2)">Front: <strong>${filled[0]}</strong></span><span style="color:var(--accent)">Rear: <strong>${filled[filled.length-1]}</strong></span><span style="color:var(--text-dim)">Count: <strong>${filled.length}</strong></span>`;
     diagramEl.appendChild(info);
-
-    const msgs = {
-      init:    'Queue initialized — all pointers at -1',
-      enqueue: `<code>EnQueue(${val})</code> — Tail→${tail}. Queue[${tail}] = ${val}. Count: ${count}`,
-      dequeue: `<code>DeQueue()</code> — returned <strong>${val}</strong>. Head→${head}. Count: ${count}`,
-      error:   `<span style="color:#ff5a5a">${note}</span>`,
-    };
-    calloutEl.innerHTML = msgs[op] || op;
-    step++;
-    setTimeout(playStep, 700);
   }
-  playStep();
+}
+
+// ── Wire up Run buttons ───────────────────────────────────────
+
+document.getElementById('array-run').addEventListener('click', () => {
+  const code = document.getElementById('array-editor').value;
+  runVisualize(
+    code,
+    document.getElementById('array-interactive-diagram'),
+    document.getElementById('array-interactive-callout'),
+    document.getElementById('array-py-status'),
+    renderInteractiveArray
+  );
+});
+
+document.getElementById('stack-run').addEventListener('click', () => {
+  const code = document.getElementById('stack-editor').value;
+  runVisualize(
+    code,
+    document.getElementById('stack-interactive-diagram'),
+    document.getElementById('stack-interactive-callout'),
+    document.getElementById('stack-py-status'),
+    renderInteractiveStack
+  );
+});
+
+document.getElementById('queue-run').addEventListener('click', () => {
+  const code = document.getElementById('queue-editor').value;
+  runVisualize(
+    code,
+    document.getElementById('queue-interactive-diagram'),
+    document.getElementById('queue-interactive-callout'),
+    document.getElementById('queue-py-status'),
+    renderInteractiveQueue
+  );
 });
