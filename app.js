@@ -861,7 +861,31 @@ async function runVisualize(userCode, diagramEl, calloutEl, statusEl, renderFn) 
   // 2. Instrument: after every executable line, print a JSON snapshot
   const lines = userCode.split('\n');
   const out = [];
-  out.push('import json as _json');
+  // Pure-Python JSON serializer (Skulpt does not support the json module)
+  out.push('def _dumps(obj):');
+  out.push('    if isinstance(obj, bool):');
+  out.push('        if obj:');
+  out.push('            return "true"');
+  out.push('        return "false"');
+  out.push('    if obj is None:');
+  out.push('        return "null"');
+  out.push('    if isinstance(obj, int) or isinstance(obj, float):');
+  out.push('        return str(obj)');
+  out.push('    if isinstance(obj, str):');
+  out.push('        s = obj.replace(chr(92), chr(92)+chr(92))');
+  out.push('        s = s.replace(chr(34), chr(92)+chr(34))');
+  out.push('        s = s.replace(chr(10), chr(92)+chr(110))');
+  out.push('        s = s.replace(chr(13), chr(92)+chr(114))');
+  out.push('        s = s.replace(chr(9), chr(92)+chr(116))');
+  out.push('        return chr(34) + s + chr(34)');
+  out.push('    if isinstance(obj, list):');
+  out.push('        return "[" + ", ".join([_dumps(v) for v in obj]) + "]"');
+  out.push('    if isinstance(obj, dict):');
+  out.push('        items = []');
+  out.push('        for k in obj:');
+  out.push('            items.append(chr(34) + str(k) + chr(34) + ": " + _dumps(obj[k]))');
+  out.push('        return "{" + ", ".join(items) + "}"');
+  out.push('    return str(obj)');
   out.push('_snapshots = []');
   out.push('_labels = []');
 
@@ -882,7 +906,7 @@ async function runVisualize(userCode, diagramEl, calloutEl, statusEl, renderFn) 
     );
   }
   // Print results as JSON at the end
-  out.push('print(_json.dumps({"snapshots": _snapshots, "labels": _labels}))');
+  out.push('print(_dumps({"snapshots": _snapshots, "labels": _labels}))');
 
   statusEl.textContent = 'Running...';
   statusEl.className = 'pyodide-status';
