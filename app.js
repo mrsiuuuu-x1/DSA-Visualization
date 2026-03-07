@@ -29,10 +29,16 @@ function syntaxHL(raw) {
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
-  s = s.replace(/'([^']*)'/g, (_, inner) => `<span class="str">'${inner}'</span>`);
+  // Extract strings into placeholders so keyword/function regexes can't match inside HTML attrs
+  const strings = [];
+  s = s.replace(/'([^']*)'/g, (_, inner) => {
+    strings.push(`<span class="str">'${inner}'</span>`);
+    return `\x00S${strings.length - 1}\x00`;
+  });
   s = s.replace(/\b(def|class|return|if|else|elif|for|while|in|not|and|or|None|True|False|import|from|pass|self|break)\b/g, '<span class="kw">$1</span>');
   s = s.replace(/\b([A-Za-z_][A-Za-z0-9_]*)\s*(?=\()/g, '<span class="fn">$1</span>');
   s = s.replace(/(^|[\s,=\[(<>!])(-?\d+)(?=[\s,\])<>!;+\-*\/]|$)/g, '$1<span class="num">$2</span>');
+  s = s.replace(/\x00S(\d+)\x00/g, (_, idx) => strings[idx]);
   if (comment) {
     const escaped = comment.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     s += (s ? ' ' : '') + `<span class="cmt">${escaped}</span>`;
