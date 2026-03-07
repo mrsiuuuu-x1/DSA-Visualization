@@ -56,6 +56,9 @@ function highlightLine(preId, lineIdx, prevIdx) {
   }
 }
 
+// ── Global animation speed (ms). Slider inverts: right = fast = low delay ──
+let stepDelay = 900;
+
 function makeController(stepBtn, resetBtn, autoBtn, stepNumEl, stepTotalEl, steps, runStep, doReset) {
   let current = 0;
   let autoTimer = null;
@@ -84,7 +87,7 @@ function makeController(stepBtn, resetBtn, autoBtn, stepNumEl, stepTotalEl, step
       autoBtn.textContent = '▶ Auto';
     } else {
       autoBtn.textContent = '⏸ Pause';
-      autoTimer = setInterval(next, 900);
+      autoTimer = setInterval(next, stepDelay);
     }
   });
 
@@ -950,7 +953,7 @@ async function runVisualize(userCode, diagramEl, calloutEl, statusEl, renderFn) 
       renderFn(diagramEl, snap, varName);
       calloutEl.innerHTML = `<code>${label}</code>`;
       i++;
-      setTimeout(play, 750);
+      setTimeout(play, stepDelay);
     }
     play();
 
@@ -1067,3 +1070,32 @@ document.getElementById('queue-run').addEventListener('click', () => {
     renderInteractiveQueue
   );
 });
+
+// ══════════════════════════════════════════════════════════════
+//  SPEED SLIDER — injected into every .controls row
+// ══════════════════════════════════════════════════════════════
+function injectSpeedSliders() {
+  document.querySelectorAll('.controls').forEach(row => {
+    // Don't double-inject
+    if (row.querySelector('.speed-wrap')) return;
+    const wrap = document.createElement('div');
+    wrap.className = 'speed-wrap';
+    wrap.title = 'Animation speed';
+    wrap.innerHTML = `
+      <span class="speed-label" aria-hidden="true">🐢</span>
+      <input type="range" class="speed-slider" min="200" max="2000" step="100" value="900"
+             aria-label="Animation speed">
+      <span class="speed-label" aria-hidden="true">⚡</span>
+    `;
+    row.appendChild(wrap);
+
+    wrap.querySelector('.speed-slider').addEventListener('input', e => {
+      // Invert: slider right (2000) = fast = low delay (200ms)
+      stepDelay = 2200 - Number(e.target.value);
+      // Keep all sliders in sync
+      document.querySelectorAll('.speed-slider').forEach(s => { s.value = e.target.value; });
+    });
+  });
+}
+
+injectSpeedSliders();
