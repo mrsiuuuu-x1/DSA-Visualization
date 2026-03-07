@@ -868,15 +868,17 @@ async function runVisualize(userCode, diagramEl, calloutEl, statusEl, renderFn) 
   for (const line of lines) {
     out.push(line);
     const s = line.trim();
-    if (!s || s.startsWith('#') || /^(def |class |else:|elif |except|finally:|return |pass$)/.test(s)) continue;
+    if (!s || s.startsWith('#') || s.endsWith(':') || /^(def |class |return |pass$)/.test(s)) continue;
+    // Get leading whitespace to preserve indentation inside functions/blocks
+    const indent = line.match(/^(\s*)/)[0];
     // After each executable line, try to snapshot the target variable
     out.push(
-      `try:\n` +
-      `  _tmp = list(${varName})\n` +
-      `  _snapshots.append(_tmp)\n` +
-      `  _labels.append(${JSON.stringify(s.slice(0, 60))})\n` +
-      `except:\n` +
-      `  pass`
+      `${indent}try:\n` +
+      `${indent}  _tmp = list(${varName})\n` +
+      `${indent}  _snapshots.append(_tmp)\n` +
+      `${indent}  _labels.append(${JSON.stringify(s.slice(0, 60))})\n` +
+      `${indent}except:\n` +
+      `${indent}  pass`
     );
   }
   // Print results as JSON at the end
