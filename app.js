@@ -30,6 +30,10 @@ function syntaxHL(raw) {
     strings.push(`<span class="str">'${inner}'</span>`);
     return `\x00S${strings.length - 1}\x00`;
   });
+  s = s.replace(/"([^"]*)"/g, (_, inner) => {
+    strings.push(`<span class="str">"${inner}"</span>`);
+    return `\x00S${strings.length - 1}\x00`;
+  });
   s = s.replace(/\b(def|class|return|if|else|elif|for|while|in|not|and|or|None|True|False|import|from|pass|self|break)\b/g, '<span class="kw">$1</span>');
   s = s.replace(/\b([A-Za-z_][A-Za-z0-9_]*)\s*(?=\()/g, '<span class="fn">$1</span>');
   s = s.replace(/(^|[\s,=\[(<>!])(-?\d+)(?=[\s,\])<>!;+\-*\/]|$)/g, '$1<span class="num">$2</span>');
@@ -700,41 +704,41 @@ const btSteps = [
   { line:11, tree:[], hl:-1, msg:"<code>SetLeft / SetData / SetRight</code> — public setters allow controlled modification of private fields" },
   { line:18, tree:[], hl:-1, msg:"<code>class TreeClass</code> — stores nodes in a fixed array <code>__Tree[20]</code>. Uses <strong>integer indices</strong> as pointers instead of object references" },
   { line:19, tree:[], hl:-1, msg:"<code>__FirstNode = -1</code>, <code>__NumberNodes = 0</code> — tree is empty. __Tree is pre-filled with dummy Node(-1) objects" },
-  { line:57, tree:[], hl:-1, msg:"<code>TheTree = TreeClass()</code> — create the tree" },
+  { line:58, tree:[], hl:-1, msg:"<code>TheTree = TreeClass()</code> — create the tree" },
 
-    { line:58, tree:[], hl:-1, msg:"<code>InsertNode(Node(10))</code> — __NumberNodes is 0, so 10 becomes the root at index 0" },
+    { line:59, tree:[], hl:-1, msg:"<code>InsertNode(Node(10))</code> — __NumberNodes is 0, so 10 becomes the root at index 0" },
   { line:25, tree:[], hl:-1, msg:"<code>if self.__NumberNodes == 0</code> — True! First node ever inserted" },
   { line:26, tree:[{data:10,left:-1,right:-1}], hl:0, msg:"<code>__Tree[0] = NewNode</code> — place Node(10) at index 0" },
   { line:27, tree:[{data:10,left:-1,right:-1}], hl:0, msg:"<code>__FirstNode = 0</code> — root is at index 0. <code>__NumberNodes</code> becomes 1" },
 
-    { line:59, tree:[{data:10,left:-1,right:-1}], hl:-1, msg:"<code>InsertNode(Node(11))</code> — tree is not empty, traverse to find position" },
+    { line:60, tree:[{data:10,left:-1,right:-1}], hl:-1, msg:"<code>InsertNode(Node(11))</code> — tree is not empty, traverse to find position" },
   { line:30, tree:[{data:10,left:-1,right:-1},{data:11,left:-1,right:-1}], hl:1, msg:"<code>__Tree[1] = Node(11)</code> — place at next free index (1). Now traverse from root" },
   { line:33, tree:[{data:10,left:-1,right:-1},{data:11,left:-1,right:-1}], hl:0, msg:"<code>current = 0</code> (root). Check: Tree[0].GetData()=10 &lt; 11? Yes → go right" },
   { line:34, tree:[{data:10,left:-1,right:-1},{data:11,left:-1,right:-1}], hl:0, msg:"<code>GetRight() == -1</code> → right is empty! Call <code>SetRight(1)</code>" },
   { line:35, tree:[{data:10,left:-1,right:1},{data:11,left:-1,right:-1}], hl:1, msg:"<code>Tree[0].SetRight(1)</code> — node 10's right pointer now = 1. <code>__NumberNodes</code> = 2. Break!" },
 
-    { line:60, tree:[{data:10,left:-1,right:1},{data:11,left:-1,right:-1}], hl:-1, msg:"<code>InsertNode(Node(5))</code> — traverse from root to find correct position" },
+    { line:61, tree:[{data:10,left:-1,right:1},{data:11,left:-1,right:-1}], hl:-1, msg:"<code>InsertNode(Node(5))</code> — traverse from root to find correct position" },
   { line:30, tree:[{data:10,left:-1,right:1},{data:11,left:-1,right:-1},{data:5,left:-1,right:-1}], hl:2, msg:"<code>__Tree[2] = Node(5)</code> — placed at index 2. Traversing from root..." },
   { line:40, tree:[{data:10,left:-1,right:1},{data:11,left:-1,right:-1},{data:5,left:-1,right:-1}], hl:0, msg:"<code>Tree[0].GetData()=10 > 5</code> → go left. <code>GetLeft()==-1</code> → empty! <code>SetLeft(2)</code>" },
-  { line:43, tree:[{data:10,left:2,right:1},{data:11,left:-1,right:-1},{data:5,left:-1,right:-1}], hl:2, msg:"<code>Tree[0].SetLeft(2)</code> — node 10's left pointer = 2. <code>__NumberNodes</code> = 3. Break!" },
+  { line:42, tree:[{data:10,left:2,right:1},{data:11,left:-1,right:-1},{data:5,left:-1,right:-1}], hl:2, msg:"<code>Tree[0].SetLeft(2)</code> — node 10's left pointer = 2. <code>__NumberNodes</code> = 3. Break!" },
 
-    { line:61, tree:[{data:10,left:2,right:1},{data:11,left:-1,right:-1},{data:5,left:-1,right:-1}], hl:-1, msg:"<code>InsertNode(Node(1))</code> — 1 &lt; 10 → go left to [2]. 1 &lt; 5 → go left. Empty → insert" },
+    { line:62, tree:[{data:10,left:2,right:1},{data:11,left:-1,right:-1},{data:5,left:-1,right:-1}], hl:-1, msg:"<code>InsertNode(Node(1))</code> — 1 &lt; 10 → go left to [2]. 1 &lt; 5 → go left. Empty → insert" },
   { line:30, tree:[{data:10,left:2,right:1},{data:11,left:-1,right:-1},{data:5,left:-1,right:-1},{data:1,left:-1,right:-1}], hl:3, msg:"<code>__Tree[3] = Node(1)</code>. Traverse: root(10)→left→[2](5)→left==-1 → SetLeft(3)" },
-  { line:43, tree:[{data:10,left:2,right:1},{data:11,left:-1,right:-1},{data:5,left:3,right:-1},{data:1,left:-1,right:-1}], hl:3, msg:"<code>Tree[2].SetLeft(3)</code> — node 5's left pointer = 3. <code>__NumberNodes</code> = 4" },
+  { line:42, tree:[{data:10,left:2,right:1},{data:11,left:-1,right:-1},{data:5,left:3,right:-1},{data:1,left:-1,right:-1}], hl:3, msg:"<code>Tree[2].SetLeft(3)</code> — node 5's left pointer = 3. <code>__NumberNodes</code> = 4" },
 
-    { line:62, tree:[{data:10,left:2,right:1},{data:11,left:-1,right:-1},{data:5,left:3,right:-1},{data:1,left:-1,right:-1}], hl:-1, msg:"<code>InsertNode(Node(20))</code> — 20 > 10 → right→[1](11). 20 > 11 → right==-1 → insert" },
+    { line:63, tree:[{data:10,left:2,right:1},{data:11,left:-1,right:-1},{data:5,left:3,right:-1},{data:1,left:-1,right:-1}], hl:-1, msg:"<code>InsertNode(Node(20))</code> — 20 > 10 → right→[1](11). 20 > 11 → right==-1 → insert" },
   { line:30, tree:[{data:10,left:2,right:1},{data:11,left:-1,right:-1},{data:5,left:3,right:-1},{data:1,left:-1,right:-1},{data:20,left:-1,right:-1}], hl:4, msg:"<code>__Tree[4] = Node(20)</code>. Traverse: [0](10)→right→[1](11)→right==-1 → SetRight(4)" },
   { line:35, tree:[{data:10,left:2,right:1},{data:11,left:-1,right:4},{data:5,left:3,right:-1},{data:1,left:-1,right:-1},{data:20,left:-1,right:-1}], hl:4, msg:"<code>Tree[1].SetRight(4)</code> — node 11's right pointer = 4. <code>__NumberNodes</code> = 5" },
 
-    { line:63, tree:[{data:10,left:2,right:1},{data:11,left:-1,right:4},{data:5,left:3,right:-1},{data:1,left:-1,right:-1},{data:20,left:-1,right:-1}], hl:-1, msg:"<code>InsertNode(Node(7))</code> — 7 &lt; 10 → left→[2](5). 7 > 5 → right==-1 → insert" },
+    { line:64, tree:[{data:10,left:2,right:1},{data:11,left:-1,right:4},{data:5,left:3,right:-1},{data:1,left:-1,right:-1},{data:20,left:-1,right:-1}], hl:-1, msg:"<code>InsertNode(Node(7))</code> — 7 &lt; 10 → left→[2](5). 7 > 5 → right==-1 → insert" },
   { line:30, tree:[{data:10,left:2,right:1},{data:11,left:-1,right:4},{data:5,left:3,right:-1},{data:1,left:-1,right:-1},{data:20,left:-1,right:-1},{data:7,left:-1,right:-1}], hl:5, msg:"<code>__Tree[5] = Node(7)</code>. Traverse: [0]→left→[2](5)→right==-1 → SetRight(5)" },
   { line:35, tree:[{data:10,left:2,right:1},{data:11,left:-1,right:4},{data:5,left:3,right:5},{data:1,left:-1,right:-1},{data:20,left:-1,right:-1},{data:7,left:-1,right:-1}], hl:5, msg:"<code>Tree[2].SetRight(5)</code> — node 5's right pointer = 5. <code>__NumberNodes</code> = 6" },
 
-    { line:64, tree:[{data:10,left:2,right:1},{data:11,left:-1,right:4},{data:5,left:3,right:5},{data:1,left:-1,right:-1},{data:20,left:-1,right:-1},{data:7,left:-1,right:-1}], hl:-1, msg:"<code>InsertNode(Node(15))</code> — 15 > 10 → right→[1](11). 15 > 11 → right→[4](20). 15 &lt; 20 → left==-1 → insert" },
+    { line:65, tree:[{data:10,left:2,right:1},{data:11,left:-1,right:4},{data:5,left:3,right:5},{data:1,left:-1,right:-1},{data:20,left:-1,right:-1},{data:7,left:-1,right:-1}], hl:-1, msg:"<code>InsertNode(Node(15))</code> — 15 > 10 → right→[1](11). 15 > 11 → right→[4](20). 15 &lt; 20 → left==-1 → insert" },
   { line:30, tree:[{data:10,left:2,right:1},{data:11,left:-1,right:4},{data:5,left:3,right:5},{data:1,left:-1,right:-1},{data:20,left:-1,right:-1},{data:7,left:-1,right:-1},{data:15,left:-1,right:-1}], hl:6, msg:"<code>__Tree[6] = Node(15)</code>. Traverse: [0]→[1]→[4](20)→left==-1 → SetLeft(6)" },
-  { line:43, tree:[{data:10,left:2,right:1},{data:11,left:-1,right:4},{data:5,left:3,right:5},{data:1,left:-1,right:-1},{data:20,left:6,right:-1},{data:7,left:-1,right:-1},{data:15,left:-1,right:-1}], hl:6, msg:"<code>Tree[4].SetLeft(6)</code> — node 20's left = 6. <code>__NumberNodes</code> = 7. All 7 nodes inserted!" },
+  { line:42, tree:[{data:10,left:2,right:1},{data:11,left:-1,right:4},{data:5,left:3,right:5},{data:1,left:-1,right:-1},{data:20,left:6,right:-1},{data:7,left:-1,right:-1},{data:15,left:-1,right:-1}], hl:6, msg:"<code>Tree[4].SetLeft(6)</code> — node 20's left = 6. <code>__NumberNodes</code> = 7. All 7 nodes inserted!" },
 
-    { line:48, tree:[{data:10,left:2,right:1},{data:11,left:-1,right:4},{data:5,left:3,right:5},{data:1,left:-1,right:-1},{data:20,left:6,right:-1},{data:7,left:-1,right:-1},{data:15,left:-1,right:-1}], hl:-1,
+    { line:66, tree:[{data:10,left:2,right:1},{data:11,left:-1,right:4},{data:5,left:3,right:5},{data:1,left:-1,right:-1},{data:20,left:6,right:-1},{data:7,left:-1,right:-1},{data:15,left:-1,right:-1}], hl:-1,
     msg:"<code>OutputTree()</code> — prints each node as <strong>Left,Data,Right</strong>:<br>2,10,1 | -1,11,4 | 3,5,5 | -1,1,-1 | 6,20,-1 | -1,7,-1 | -1,15,-1" },
 ];
 
@@ -1137,7 +1141,7 @@ function renderInteractiveTree(diagramEl, snap, varName) {
   const svgNS = 'http://www.w3.org/2000/svg';
   const svg = document.createElementNS(svgNS, 'svg');
   svg.setAttribute('width', '100%');
-  svg.setAttribute('height', '240');
+  svg.setAttribute('height', '300');
   svg.style.overflow = 'visible';
 
   const W = diagramEl.clientWidth || 480;
@@ -1294,3 +1298,34 @@ setupInlineHints('linkedlist-editor');
 setupInlineHints('stack-editor');
 setupInlineHints('queue-editor');
 setupInlineHints('tree-editor');
+
+// ══════════════════════════════════════════════════════════════
+//  TAB KEY + CTRL+ENTER in code editors
+// ══════════════════════════════════════════════════════════════
+document.querySelectorAll('.code-editor').forEach(editor => {
+  editor.addEventListener('keydown', e => {
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      const start = editor.selectionStart;
+      const end = editor.selectionEnd;
+      editor.value = editor.value.substring(0, start) + '    ' + editor.value.substring(end);
+      editor.selectionStart = editor.selectionEnd = start + 4;
+    }
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+      e.preventDefault();
+      const panel = editor.closest('.code-panel');
+      if (panel) {
+        const runBtn = panel.querySelector('.run-btn');
+        if (runBtn && !runBtn.disabled) runBtn.click();
+      }
+    }
+  });
+});
+
+document.querySelectorAll('.editor-controls').forEach(row => {
+  if (row.querySelector('.kbd-hint')) return;
+  const hint = document.createElement('span');
+  hint.className = 'kbd-hint';
+  hint.textContent = 'Ctrl+Enter to run · Tab to indent';
+  row.appendChild(hint);
+});
