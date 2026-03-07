@@ -29,7 +29,7 @@ function syntaxHL(raw) {
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
-  // Extract strings into placeholders so keyword/function regexes can't match inside HTML attrs
+  // Extract strings into placeholders so keyword/function regexes can't match inside HTML attributes
   const strings = [];
   s = s.replace(/'([^']*)'/g, (_, inner) => {
     strings.push(`<span class="str">'${inner}'</span>`);
