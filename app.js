@@ -799,38 +799,17 @@ document.getElementById('tree-step-total').textContent = btSteps.length;
 
 
 
-// ══════════════════════════════════════════════════════════════
-//  INTERACTIVE MODE — Pyodide + @visualize tag
-// ══════════════════════════════════════════════════════════════
 
-let pyodide = null;
-let pyodideReady = false;
-
-async function initPyodide() {
-  try {
-    pyodide = await loadPyodide();
-    pyodideReady = true;
-    document.querySelectorAll('.pyodide-status').forEach(el => {
-      el.textContent = '✓ Python ready';
-      el.classList.add('ready');
-    });
-    document.querySelectorAll('.run-btn').forEach(btn => btn.disabled = false);
-  } catch (e) {
-    document.querySelectorAll('.pyodide-status').forEach(el => {
-      el.textContent = '✗ Failed to load Python';
-      el.classList.add('error');
-    });
-  }
-}
-document.querySelectorAll('.run-btn').forEach(btn => btn.disabled = true);
-initPyodide();
+// ══════════════════════════════════════════════════════════════
+//  INTERACTIVE MODE — Skulpt Python + @visualize tag
+// ══════════════════════════════════════════════════════════════
 
 // ── Mode toggle ───────────────────────────────────────────────
 function setupModeToggle(name) {
-  const btn          = document.getElementById(`${name}-mode-toggle`);
-  const stepDiv      = document.getElementById(`${name}-step-mode`);
-  const interactDiv  = document.getElementById(`${name}-interactive-mode`);
-  let interactive    = false;
+  const btn         = document.getElementById(`${name}-mode-toggle`);
+  const stepDiv     = document.getElementById(`${name}-step-mode`);
+  const interactDiv = document.getElementById(`${name}-interactive-mode`);
+  let interactive   = false;
   btn.addEventListener('click', () => {
     interactive = !interactive;
     btn.classList.toggle('active', interactive);
@@ -843,74 +822,89 @@ setupModeToggle('array');
 setupModeToggle('stack');
 setupModeToggle('queue');
 
-// ── Core runner — @visualize tag approach ─────────────────────
-// Parses "# @visualize VarName" from user code, instruments each
-// executable line to snapshot that variable, then animates results.
-async function runVisualize(userCode, diagramEl, calloutEl, statusEl, renderFn) {
-  if (!pyodideReady) {
-    calloutEl.innerHTML = '<span style="color:#ff5a5a">Python is still loading, please wait...</span>';
-    return;
-  }
+// Mark all as ready immediately — Skulpt needs no loading
+document.querySelectorAll('.pyodide-status').forEach(el => {
+  el.textContent = '✓ Python ready';
+  el.classList.add('ready');
+});
 
+// ── Skulpt runner ─────────────────────────────────────────────
+function runSkulpt(code) {
+  return new Promise((resolve, reject) => {
+    let output = '';
+    Sk.configure({
+      output: s => { output += s; },
+      read: f => {
+        if (Sk.builtinFiles?.files[f] !== undefined) return Sk.builtinFiles.files[f];
+        throw new Error(`File not found: '${f}'`);
+      },
+      __future__: Sk.python3
+    });
+    Sk.misceval.asyncToPromise(() =>
+      Sk.importMainWithBody('<stdin>', false, code, true)
+    ).then(() => resolve(output), err => reject(err));
+  });
+}
+
+// ── Core visualizer ───────────────────────────────────────────
+// Instruments user code to snapshot watched variable after each line,
+// then collects results via print() and animates them.
+async function runVisualize(userCode, diagramEl, calloutEl, statusEl, renderFn) {
   // 1. Extract @visualize variable name
   const tagMatch = userCode.match(/#\s*@visualize\s+(\w+)/);
   if (!tagMatch) {
-    calloutEl.innerHTML = `<span style="color:#ff5a5a">Add <code># @visualize YourVarName</code> anywhere in your code to mark what to watch.</span>`;
+    calloutEl.innerHTML = `<span style="color:#ff5a5a">Add <code># @visualize YourVarName</code> anywhere in your code.</span>`;
     return;
   }
   const varName = tagMatch[1];
 
-  // 2. Build instrumented code — after every non-empty, non-comment line
-  //    inject a snapshot of the watched variable
+  // 2. Instrument: after every executable line, print a JSON snapshot
   const lines = userCode.split('\n');
-  const instrumented = [];
-  instrumented.push('_snapshots = []');
-  instrumented.push('_labels = []');
+  const out = [];
+  out.push('import json as _json');
+  out.push('_snapshots = []');
+  out.push('_labels = []');
 
-  // Detect indentation so we only snapshot at top-level statements
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    instrumented.push(line);
-    const stripped = line.trim();
-    // Skip blank lines, comments, def/class declarations, else/elif/except/finally
-    if (!stripped || stripped.startsWith('#') ||
-        /^(def |class |else:|elif |except|finally:)/.test(stripped)) continue;
-    // Only snapshot after top-level lines (no leading spaces for simple cases,
-    // but also after indented lines so we catch function bodies)
-    instrumented.push(
+  for (const line of lines) {
+    out.push(line);
+    const s = line.trim();
+    if (!s || s.startsWith('#') || /^(def |class |else:|elif |except|finally:|return |pass$)/.test(s)) continue;
+    // After each executable line, try to snapshot the target variable
+    out.push(
       `try:\n` +
-      `    _v = ${varName}[:] if hasattr(${varName},'__getitem__') else list(${varName})\n` +
-      `    _snapshots.append(list(_v))\n` +
-      `    _labels.append(${JSON.stringify(stripped.slice(0, 60))})\n` +
-      `except: pass`
+      `  _tmp = list(${varName})\n` +
+      `  _snapshots.append(_tmp)\n` +
+      `  _labels.append(${JSON.stringify(s.slice(0, 60))})\n` +
+      `except:\n` +
+      `  pass`
     );
   }
+  // Print results as JSON at the end
+  out.push('print(_json.dumps({"snapshots": _snapshots, "labels": _labels}))');
 
   statusEl.textContent = 'Running...';
   statusEl.className = 'pyodide-status';
 
   try {
-    await pyodide.runPythonAsync('_snapshots = []\n_labels = []');
-    await pyodide.runPythonAsync(instrumented.join('\n'));
+    const output = await runSkulpt(out.join('\n'));
 
-    const rawSnaps  = pyodide.globals.get('_snapshots').toJs();
-    const rawLabels = pyodide.globals.get('_labels').toJs();
+    // Parse the last line of output as JSON
+    const lastLine = output.trim().split('\n').pop();
+    const { snapshots: rawSnaps, labels: rawLabels } = JSON.parse(lastLine);
 
     // Deduplicate consecutive identical snapshots
     const steps = [];
     let prev = null;
     for (let i = 0; i < rawSnaps.length; i++) {
-      const snap = Array.isArray(rawSnaps[i]) ? rawSnaps[i] : Array.from(rawSnaps[i]);
-      const label = rawLabels[i];
-      const key = JSON.stringify(snap);
+      const key = JSON.stringify(rawSnaps[i]);
       if (key !== prev) {
-        steps.push({ snap, label });
+        steps.push({ snap: rawSnaps[i], label: rawLabels[i] });
         prev = key;
       }
     }
 
     if (steps.length === 0) {
-      calloutEl.innerHTML = `<span style="color:#ff5a5a">No changes detected on <code>${varName}</code>. Check your variable name.</span>`;
+      calloutEl.innerHTML = `<span style="color:#ff5a5a">No changes on <code>${varName}</code>. Check the variable name matches exactly.</span>`;
       statusEl.textContent = '✓ Python ready';
       statusEl.classList.add('ready');
       return;
@@ -919,15 +913,15 @@ async function runVisualize(userCode, diagramEl, calloutEl, statusEl, renderFn) 
     statusEl.textContent = '✓ Python ready';
     statusEl.classList.add('ready');
 
-    // Animate
     let i = 0;
     function play() {
       if (i >= steps.length) {
-        calloutEl.innerHTML = `✅ Done — <strong>${varName}</strong> has ${steps[steps.length-1].snap.length} item(s)`;
+        const last = steps[steps.length - 1].snap.filter(v => v !== -1 && v !== '' && v !== null);
+        calloutEl.innerHTML = `✅ Done — <strong>${varName}</strong> has ${last.length} item(s)`;
         return;
       }
       const { snap, label } = steps[i];
-      renderFn(diagramEl, snap, varName, label);
+      renderFn(diagramEl, snap, varName);
       calloutEl.innerHTML = `<code>${label}</code>`;
       i++;
       setTimeout(play, 750);
@@ -937,7 +931,8 @@ async function runVisualize(userCode, diagramEl, calloutEl, statusEl, renderFn) 
   } catch (e) {
     statusEl.textContent = '✗ Error';
     statusEl.classList.add('error');
-    calloutEl.innerHTML = `<span style="color:#ff5a5a">Error: ${e.message.split('\n').pop()}</span>`;
+    const msg = (e.toString().match(/SyntaxError.*|NameError.*|TypeError.*|ValueError.*/) || [e.toString()])[0];
+    calloutEl.innerHTML = `<span style="color:#ff5a5a">Error: ${msg}</span>`;
   }
 }
 
@@ -945,13 +940,14 @@ async function runVisualize(userCode, diagramEl, calloutEl, statusEl, renderFn) 
 
 function renderInteractiveArray(diagramEl, snap) {
   diagramEl.innerHTML = '';
-  if (snap.length === 0) {
+  const filled = snap.filter(v => v !== null && v !== '');
+  if (filled.length === 0) {
     diagramEl.innerHTML = '<span class="diagram-placeholder">[ empty ]</span>';
     return;
   }
   const row = document.createElement('div');
   row.style.cssText = 'display:flex;gap:.5rem;flex-wrap:wrap;justify-content:center;';
-  snap.forEach((val, i) => {
+  filled.forEach((val, i) => {
     const box = document.createElement('div');
     box.className = 'arr-box';
     box.innerHTML = `<div class="arr-cell">${val}</div><div class="arr-idx">[${i}]</div>`;
@@ -962,19 +958,18 @@ function renderInteractiveArray(diagramEl, snap) {
 
 function renderInteractiveStack(diagramEl, snap, varName) {
   diagramEl.innerHTML = '';
+  const filled = snap.filter(v => v !== -1 && v !== '' && v !== null);
   const wrap = document.createElement('div');
   wrap.style.cssText = 'display:flex;gap:2rem;align-items:center;justify-content:center;width:100%;';
   const left = document.createElement('div');
   left.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:6px;min-width:100px;';
-  if (snap.length === 0) {
+  if (filled.length === 0) {
     left.innerHTML = '<span class="diagram-placeholder">[ empty ]</span>';
   } else {
     const lbl = document.createElement('div');
     lbl.style.cssText = 'font-family:var(--mono);font-size:.65rem;color:var(--accent);margin-bottom:2px;';
     lbl.textContent = '▲ TOP';
     left.appendChild(lbl);
-    // Filter out -1 sentinel values (unfilled slots)
-    const filled = snap.filter(v => v !== -1 && v !== '' && v !== null);
     [...filled].reverse().forEach((v, ri) => {
       const el = document.createElement('div');
       el.className = 'stack-item' + (ri === 0 ? ' top-item' : '');
@@ -984,7 +979,6 @@ function renderInteractiveStack(diagramEl, snap, varName) {
   }
   const right = document.createElement('div');
   right.style.cssText = 'font-family:var(--mono);font-size:.72rem;display:flex;flex-direction:column;gap:4px;';
-  const filled = snap.filter(v => v !== -1 && v !== '' && v !== null);
   right.innerHTML = `<div style="color:var(--text-dim)">${varName}</div><div style="color:var(--accent);font-size:1rem;font-weight:700;">${filled.length} item(s)</div>`;
   wrap.appendChild(left);
   wrap.appendChild(right);
@@ -994,10 +988,10 @@ function renderInteractiveStack(diagramEl, snap, varName) {
 function renderInteractiveQueue(diagramEl, snap, varName) {
   diagramEl.innerHTML = '';
   const filled = snap.filter(v => v !== '' && v !== null && v !== -1);
-  const top = document.createElement('div');
-  top.style.cssText = 'display:flex;gap:4px;flex-wrap:wrap;justify-content:center;width:100%;';
+  const row = document.createElement('div');
+  row.style.cssText = 'display:flex;gap:4px;flex-wrap:wrap;justify-content:center;width:100%;';
   if (filled.length === 0) {
-    top.innerHTML = '<span class="diagram-placeholder">[ empty queue ]</span>';
+    row.innerHTML = '<span class="diagram-placeholder">[ empty queue ]</span>';
   } else {
     filled.forEach((v, i) => {
       const el = document.createElement('div');
@@ -1005,10 +999,10 @@ function renderInteractiveQueue(diagramEl, snap, varName) {
         + (i === 0 ? ' front-item' : '')
         + (i === filled.length - 1 ? ' rear-item' : '');
       el.textContent = v;
-      top.appendChild(el);
+      row.appendChild(el);
     });
   }
-  diagramEl.appendChild(top);
+  diagramEl.appendChild(row);
   if (filled.length > 0) {
     const info = document.createElement('div');
     info.style.cssText = 'display:flex;gap:1.5rem;margin-top:.6rem;font-family:var(--mono);font-size:.72rem;justify-content:center;';
@@ -1018,11 +1012,9 @@ function renderInteractiveQueue(diagramEl, snap, varName) {
 }
 
 // ── Wire up Run buttons ───────────────────────────────────────
-
 document.getElementById('array-run').addEventListener('click', () => {
-  const code = document.getElementById('array-editor').value;
   runVisualize(
-    code,
+    document.getElementById('array-editor').value,
     document.getElementById('array-interactive-diagram'),
     document.getElementById('array-interactive-callout'),
     document.getElementById('array-py-status'),
@@ -1031,9 +1023,8 @@ document.getElementById('array-run').addEventListener('click', () => {
 });
 
 document.getElementById('stack-run').addEventListener('click', () => {
-  const code = document.getElementById('stack-editor').value;
   runVisualize(
-    code,
+    document.getElementById('stack-editor').value,
     document.getElementById('stack-interactive-diagram'),
     document.getElementById('stack-interactive-callout'),
     document.getElementById('stack-py-status'),
@@ -1042,9 +1033,8 @@ document.getElementById('stack-run').addEventListener('click', () => {
 });
 
 document.getElementById('queue-run').addEventListener('click', () => {
-  const code = document.getElementById('queue-editor').value;
   runVisualize(
-    code,
+    document.getElementById('queue-editor').value,
     document.getElementById('queue-interactive-diagram'),
     document.getElementById('queue-interactive-callout'),
     document.getElementById('queue-py-status'),
