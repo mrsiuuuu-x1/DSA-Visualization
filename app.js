@@ -883,9 +883,9 @@ async function runVisualize(userCode, diagramEl, calloutEl, statusEl, renderFn) 
   out.push('    if isinstance(obj, dict):');
   out.push('        items = []');
   out.push('        for k in obj:');
-  out.push('            items.append(chr(34) + str(k) + chr(34) + ": " + _dumps(obj[k]))');
+  out.push('            items.append(_dumps(str(k)) + ": " + _dumps(obj[k]))');
   out.push('        return "{" + ", ".join(items) + "}"');
-  out.push('    return str(obj)');
+  out.push('    return _dumps(str(obj))');
   out.push('_snapshots = []');
   out.push('_labels = []');
 
