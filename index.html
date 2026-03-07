@@ -80,6 +80,7 @@ arr.pop()
 arr.insert(1, 99)
 
 # @visualize arr</textarea>
+          <pre class="code-block interactive-code-view" id="array-interactive-code" style="display:none"></pre>
           <div class="editor-controls">
             <button class="run-btn" id="array-run">▶ Run</button>
             <span class="pyodide-status" id="array-py-status">Loading Python...</span>
@@ -100,7 +101,7 @@ arr.insert(1, 99)
   <section id="linkedlist" class="section">
     <div class="section-hero">
       <h1>Linked List</h1>
-      <p class="subtitle">See how nodes are chained together with <strong>next</strong> pointers — step through each append operation.</p>
+      <p class="subtitle">See how Node <strong>records</strong> are chained with <strong>next</strong> pointers — step through append and <strong>delete</strong> operations.</p>
     </div>
     <div class="mode-toggle-row">
       <button class="mode-toggle-btn" id="linkedlist-mode-toggle">⚡ Interactive Mode</button>
@@ -153,6 +154,19 @@ class LinkedList:
             curr = curr.next
         curr.next = new
 
+    def delete(self, val):
+        if not self.head:
+            return
+        if self.head.val == val:
+            self.head = self.head.next
+            return
+        curr = self.head
+        while curr.next:
+            if curr.next.val == val:
+                curr.next = curr.next.next
+                return
+            curr = curr.next
+
     def to_list(self):
         result = []
         curr = self.head
@@ -173,10 +187,11 @@ snapshot = ll.to_list()
 ll.append(30)
 snapshot = ll.to_list()
 
-ll.append(5)
+ll.delete(20)
 snapshot = ll.to_list()
 
 # @visualize snapshot</textarea>
+          <pre class="code-block interactive-code-view" id="linkedlist-interactive-code" style="display:none"></pre>
           <div class="editor-controls">
             <button class="run-btn" id="linkedlist-run">▶ Run</button>
             <span class="pyodide-status" id="linkedlist-py-status">Loading Python...</span>
@@ -260,6 +275,7 @@ Push(43)
 Pop()
 
 # @visualize Stack</textarea>
+          <pre class="code-block interactive-code-view" id="stack-interactive-code" style="display:none"></pre>
           <div class="editor-controls">
             <button class="run-btn" id="stack-run">▶ Run</button>
             <span class="pyodide-status" id="stack-py-status">Loading Python...</span>
@@ -348,6 +364,7 @@ EnQueue(61)
 DeQueue()
 
 # @visualize Queue</textarea>
+          <pre class="code-block interactive-code-view" id="queue-interactive-code" style="display:none"></pre>
           <div class="editor-controls">
             <button class="run-btn" id="queue-run">▶ Run</button>
             <span class="pyodide-status" id="queue-py-status">Loading Python...</span>
@@ -441,6 +458,7 @@ Insert(12)
 Insert(20)
 
 # @visualize Tree</textarea>
+          <pre class="code-block interactive-code-view" id="tree-interactive-code" style="display:none"></pre>
           <div class="editor-controls">
             <button class="run-btn" id="tree-run">▶ Run</button>
             <span class="pyodide-status" id="tree-py-status">Loading Python...</span>

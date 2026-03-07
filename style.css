@@ -621,6 +621,12 @@ footer {
 }
 .code-editor:focus { border-color: var(--accent2); }
 
+.interactive-code-view {
+  max-height: 260px;
+  overflow-y: auto;
+  margin-bottom: .4rem;
+}
+
 .editor-controls {
   display: flex;
   align-items: center;
