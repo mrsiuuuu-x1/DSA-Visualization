@@ -274,7 +274,6 @@ kbd {
 .str { color: #f1fa8c; }
 .num { color: #bd93f9; }
 .cmt { color: #44475a; font-style: italic; }
-.op  { color: var(--accent2); }
 
 /* ── Diagram Panel ────────────────────────────── */
 .diagram-panel {
@@ -409,24 +408,7 @@ kbd {
   padding: 0 4px;
 }
 
-.ll-null {
-  padding: 8px 12px;
-  font-family: var(--mono);
-  font-size: .8rem;
-  color: var(--accent3);
-  border: 2px dashed var(--border);
-  border-radius: 8px;
-}
-
 /* ── Stack / Queue items ──────────────────────── */
-.stack-container {
-  display: flex;
-  flex-direction: column-reverse;
-  gap: 4px;
-  align-items: center;
-  width: 100%;
-}
-
 .stack-item {
   width: 160px;
   padding: 10px 16px;
@@ -449,32 +431,6 @@ kbd {
   border-color: var(--accent);
   background: rgba(232,255,90,0.08);
   color: var(--accent);
-}
-
-.stack-item.removing {
-  border-color: var(--accent3);
-  background: rgba(255,90,138,0.1);
-  animation: fadeOut .4s ease forwards;
-}
-
-@keyframes fadeOut {
-  to { opacity: 0; transform: scale(0.8); }
-}
-
-.stack-label {
-  font-family: var(--mono);
-  font-size: .7rem;
-  color: var(--accent);
-  letter-spacing: .08em;
-  margin-top: 4px;
-}
-
-.queue-container {
-  display: flex;
-  flex-direction: row;
-  gap: 4px;
-  align-items: center;
-  flex-wrap: wrap;
 }
 
 .queue-item {
@@ -516,8 +472,6 @@ kbd {
 }
 
 .tree-edge.active { stroke: var(--accent); stroke-width: 2.5; }
-
-.tree-node-group { cursor: default; }
 
 .tree-circle {
   fill: var(--surface2);
@@ -595,30 +549,6 @@ kbd {
   color: var(--text-dim);
   margin-left: auto;
 }
-
-/* ── Tabs ─────────────────────────────────────── */
-.tabs-row {
-  display: flex;
-  gap: .5rem;
-  margin-bottom: 0;
-}
-
-.tab-btn {
-  font-family: var(--mono);
-  font-size: .75rem;
-  font-weight: 600;
-  padding: .4rem 1rem;
-  border-radius: 6px;
-  border: 1px solid var(--border);
-  background: transparent;
-  color: var(--text-dim);
-  cursor: pointer;
-  transition: all .2s;
-  letter-spacing: .04em;
-}
-
-.tab-btn:hover { border-color: var(--accent); color: var(--accent); }
-.tab-btn.active { background: var(--surface2); color: var(--text); border-color: var(--accent2); }
 
 /* ── Footer ───────────────────────────────────── */
 footer {

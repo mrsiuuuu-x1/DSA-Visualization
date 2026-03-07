@@ -3,7 +3,6 @@
    app.js
 ═══════════════════════════════════════════════════════════ */
 
-// ── Navigation ───────────────────────────────────────────────
 document.querySelectorAll('.nav-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
@@ -13,10 +12,6 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
   });
 });
 
-
-// ══════════════════════════════════════════════════════════════
-//  UTILITIES
-// ══════════════════════════════════════════════════════════════
 function syntaxHL(raw) {
   let comment = '';
   let code = raw;
@@ -66,7 +61,6 @@ function highlightLine(preId, lineIdx, prevIdx) {
   }
 }
 
-// ── Global animation speed (ms). Slider inverts: right = fast = low delay ──
 let stepDelay = 900;
 
 function makeController(stepBtn, resetBtn, autoBtn, stepNumEl, stepTotalEl, steps, runStep, doReset) {
@@ -109,10 +103,6 @@ function makeController(stepBtn, resetBtn, autoBtn, stepNumEl, stepTotalEl, step
   });
 }
 
-
-// ══════════════════════════════════════════════════════════════
-//  ARRAY
-// ══════════════════════════════════════════════════════════════
 const arrayCode = [
   "arr = []",
   "",
@@ -183,10 +173,6 @@ makeController(
   }, resetArray
 );
 
-
-// ══════════════════════════════════════════════════════════════
-//  LINKED LIST
-// ══════════════════════════════════════════════════════════════
 const linkedCode = [
   "class Node:",
   "    def __init__(self, val):",
@@ -273,10 +259,6 @@ makeController(
   }, resetLinked
 );
 
-
-// ══════════════════════════════════════════════════════════════
-//  STACK
-// ══════════════════════════════════════════════════════════════
 const stackCode = [
   "Stack = [-1] * 30",
   "TopOfStack = -1",
@@ -385,10 +367,6 @@ makeController(
   }, resetStack
 );
 
-
-// ══════════════════════════════════════════════════════════════
-//  QUEUE
-// ══════════════════════════════════════════════════════════════
 const queueCode = [
   "Queue = ['' for x in range(100)]",
   "HeadPointer = -1",
@@ -504,10 +482,6 @@ makeController(
   }, resetQueue
 );
 
-
-// ══════════════════════════════════════════════════════════════
-//  BINARY TREE
-// ══════════════════════════════════════════════════════════════
 const btCode = [
   "class Node:",
   "    def __init__(self, pdata):",
@@ -578,13 +552,8 @@ const btCode = [
   "TheTree.OutputTree()",
 ];
 
-
 const treeSVG = document.getElementById('tree-svg');
 const treeCallout = document.getElementById('tree-callout');
-
-// ── Array-based BT helpers ──────────────────────────────────
-// treeArr: array of {data, left, right} where left/right are indices (-1 = none)
-// highlightIdx: index of node currently being inserted/traversed
 
 function computePositions(treeArr, rootIdx, W) {
   const positions = {};
@@ -677,9 +646,6 @@ function renderBTDiagram(treeArr, highlightIdx = -1) {
   diagramArea.appendChild(table);
 }
 
-
-// Each step: {line, tree:[], hl:index, msg}
-// tree is array of {data, left, right} — matches __Tree array in code
 const btSteps = [
   { line:0,  tree:[], hl:-1, msg:"<code>class Node</code> — each Node stores <strong>__Data</strong>, <strong>__LeftPointer</strong>, <strong>__RightPointer</strong> (all private, default -1)" },
   { line:5,  tree:[], hl:-1, msg:"<code>GetLeft / GetData / GetRight</code> — public getters allow read-only access to private fields" },
@@ -688,47 +654,39 @@ const btSteps = [
   { line:19, tree:[], hl:-1, msg:"<code>__FirstNode = -1</code>, <code>__NumberNodes = 0</code> — tree is empty. __Tree is pre-filled with dummy Node(-1) objects" },
   { line:57, tree:[], hl:-1, msg:"<code>TheTree = TreeClass()</code> — create the tree" },
 
-  // Insert 10 — becomes root
-  { line:58, tree:[], hl:-1, msg:"<code>InsertNode(Node(10))</code> — __NumberNodes is 0, so 10 becomes the root at index 0" },
+    { line:58, tree:[], hl:-1, msg:"<code>InsertNode(Node(10))</code> — __NumberNodes is 0, so 10 becomes the root at index 0" },
   { line:25, tree:[], hl:-1, msg:"<code>if self.__NumberNodes == 0</code> — True! First node ever inserted" },
   { line:26, tree:[{data:10,left:-1,right:-1}], hl:0, msg:"<code>__Tree[0] = NewNode</code> — place Node(10) at index 0" },
   { line:27, tree:[{data:10,left:-1,right:-1}], hl:0, msg:"<code>__FirstNode = 0</code> — root is at index 0. <code>__NumberNodes</code> becomes 1" },
 
-  // Insert 11
-  { line:59, tree:[{data:10,left:-1,right:-1}], hl:-1, msg:"<code>InsertNode(Node(11))</code> — tree is not empty, traverse to find position" },
+    { line:59, tree:[{data:10,left:-1,right:-1}], hl:-1, msg:"<code>InsertNode(Node(11))</code> — tree is not empty, traverse to find position" },
   { line:30, tree:[{data:10,left:-1,right:-1},{data:11,left:-1,right:-1}], hl:1, msg:"<code>__Tree[1] = Node(11)</code> — place at next free index (1). Now traverse from root" },
   { line:33, tree:[{data:10,left:-1,right:-1},{data:11,left:-1,right:-1}], hl:0, msg:"<code>current = 0</code> (root). Check: Tree[0].GetData()=10 &lt; 11? Yes → go right" },
   { line:34, tree:[{data:10,left:-1,right:-1},{data:11,left:-1,right:-1}], hl:0, msg:"<code>GetRight() == -1</code> → right is empty! Call <code>SetRight(1)</code>" },
   { line:35, tree:[{data:10,left:-1,right:1},{data:11,left:-1,right:-1}], hl:1, msg:"<code>Tree[0].SetRight(1)</code> — node 10's right pointer now = 1. <code>__NumberNodes</code> = 2. Break!" },
 
-  // Insert 5
-  { line:60, tree:[{data:10,left:-1,right:1},{data:11,left:-1,right:-1}], hl:-1, msg:"<code>InsertNode(Node(5))</code> — traverse from root to find correct position" },
+    { line:60, tree:[{data:10,left:-1,right:1},{data:11,left:-1,right:-1}], hl:-1, msg:"<code>InsertNode(Node(5))</code> — traverse from root to find correct position" },
   { line:30, tree:[{data:10,left:-1,right:1},{data:11,left:-1,right:-1},{data:5,left:-1,right:-1}], hl:2, msg:"<code>__Tree[2] = Node(5)</code> — placed at index 2. Traversing from root..." },
   { line:40, tree:[{data:10,left:-1,right:1},{data:11,left:-1,right:-1},{data:5,left:-1,right:-1}], hl:0, msg:"<code>Tree[0].GetData()=10 > 5</code> → go left. <code>GetLeft()==-1</code> → empty! <code>SetLeft(2)</code>" },
   { line:43, tree:[{data:10,left:2,right:1},{data:11,left:-1,right:-1},{data:5,left:-1,right:-1}], hl:2, msg:"<code>Tree[0].SetLeft(2)</code> — node 10's left pointer = 2. <code>__NumberNodes</code> = 3. Break!" },
 
-  // Insert 1
-  { line:61, tree:[{data:10,left:2,right:1},{data:11,left:-1,right:-1},{data:5,left:-1,right:-1}], hl:-1, msg:"<code>InsertNode(Node(1))</code> — 1 &lt; 10 → go left to [2]. 1 &lt; 5 → go left. Empty → insert" },
+    { line:61, tree:[{data:10,left:2,right:1},{data:11,left:-1,right:-1},{data:5,left:-1,right:-1}], hl:-1, msg:"<code>InsertNode(Node(1))</code> — 1 &lt; 10 → go left to [2]. 1 &lt; 5 → go left. Empty → insert" },
   { line:30, tree:[{data:10,left:2,right:1},{data:11,left:-1,right:-1},{data:5,left:-1,right:-1},{data:1,left:-1,right:-1}], hl:3, msg:"<code>__Tree[3] = Node(1)</code>. Traverse: root(10)→left→[2](5)→left==-1 → SetLeft(3)" },
   { line:43, tree:[{data:10,left:2,right:1},{data:11,left:-1,right:-1},{data:5,left:3,right:-1},{data:1,left:-1,right:-1}], hl:3, msg:"<code>Tree[2].SetLeft(3)</code> — node 5's left pointer = 3. <code>__NumberNodes</code> = 4" },
 
-  // Insert 20
-  { line:62, tree:[{data:10,left:2,right:1},{data:11,left:-1,right:-1},{data:5,left:3,right:-1},{data:1,left:-1,right:-1}], hl:-1, msg:"<code>InsertNode(Node(20))</code> — 20 > 10 → right→[1](11). 20 > 11 → right==-1 → insert" },
+    { line:62, tree:[{data:10,left:2,right:1},{data:11,left:-1,right:-1},{data:5,left:3,right:-1},{data:1,left:-1,right:-1}], hl:-1, msg:"<code>InsertNode(Node(20))</code> — 20 > 10 → right→[1](11). 20 > 11 → right==-1 → insert" },
   { line:30, tree:[{data:10,left:2,right:1},{data:11,left:-1,right:-1},{data:5,left:3,right:-1},{data:1,left:-1,right:-1},{data:20,left:-1,right:-1}], hl:4, msg:"<code>__Tree[4] = Node(20)</code>. Traverse: [0](10)→right→[1](11)→right==-1 → SetRight(4)" },
   { line:35, tree:[{data:10,left:2,right:1},{data:11,left:-1,right:4},{data:5,left:3,right:-1},{data:1,left:-1,right:-1},{data:20,left:-1,right:-1}], hl:4, msg:"<code>Tree[1].SetRight(4)</code> — node 11's right pointer = 4. <code>__NumberNodes</code> = 5" },
 
-  // Insert 7
-  { line:63, tree:[{data:10,left:2,right:1},{data:11,left:-1,right:4},{data:5,left:3,right:-1},{data:1,left:-1,right:-1},{data:20,left:-1,right:-1}], hl:-1, msg:"<code>InsertNode(Node(7))</code> — 7 &lt; 10 → left→[2](5). 7 > 5 → right==-1 → insert" },
+    { line:63, tree:[{data:10,left:2,right:1},{data:11,left:-1,right:4},{data:5,left:3,right:-1},{data:1,left:-1,right:-1},{data:20,left:-1,right:-1}], hl:-1, msg:"<code>InsertNode(Node(7))</code> — 7 &lt; 10 → left→[2](5). 7 > 5 → right==-1 → insert" },
   { line:30, tree:[{data:10,left:2,right:1},{data:11,left:-1,right:4},{data:5,left:3,right:-1},{data:1,left:-1,right:-1},{data:20,left:-1,right:-1},{data:7,left:-1,right:-1}], hl:5, msg:"<code>__Tree[5] = Node(7)</code>. Traverse: [0]→left→[2](5)→right==-1 → SetRight(5)" },
   { line:35, tree:[{data:10,left:2,right:1},{data:11,left:-1,right:4},{data:5,left:3,right:5},{data:1,left:-1,right:-1},{data:20,left:-1,right:-1},{data:7,left:-1,right:-1}], hl:5, msg:"<code>Tree[2].SetRight(5)</code> — node 5's right pointer = 5. <code>__NumberNodes</code> = 6" },
 
-  // Insert 15
-  { line:64, tree:[{data:10,left:2,right:1},{data:11,left:-1,right:4},{data:5,left:3,right:5},{data:1,left:-1,right:-1},{data:20,left:-1,right:-1},{data:7,left:-1,right:-1}], hl:-1, msg:"<code>InsertNode(Node(15))</code> — 15 > 10 → right→[1](11). 15 > 11 → right→[4](20). 15 &lt; 20 → left==-1 → insert" },
+    { line:64, tree:[{data:10,left:2,right:1},{data:11,left:-1,right:4},{data:5,left:3,right:5},{data:1,left:-1,right:-1},{data:20,left:-1,right:-1},{data:7,left:-1,right:-1}], hl:-1, msg:"<code>InsertNode(Node(15))</code> — 15 > 10 → right→[1](11). 15 > 11 → right→[4](20). 15 &lt; 20 → left==-1 → insert" },
   { line:30, tree:[{data:10,left:2,right:1},{data:11,left:-1,right:4},{data:5,left:3,right:5},{data:1,left:-1,right:-1},{data:20,left:-1,right:-1},{data:7,left:-1,right:-1},{data:15,left:-1,right:-1}], hl:6, msg:"<code>__Tree[6] = Node(15)</code>. Traverse: [0]→[1]→[4](20)→left==-1 → SetLeft(6)" },
   { line:43, tree:[{data:10,left:2,right:1},{data:11,left:-1,right:4},{data:5,left:3,right:5},{data:1,left:-1,right:-1},{data:20,left:6,right:-1},{data:7,left:-1,right:-1},{data:15,left:-1,right:-1}], hl:6, msg:"<code>Tree[4].SetLeft(6)</code> — node 20's left = 6. <code>__NumberNodes</code> = 7. All 7 nodes inserted!" },
 
-  // OutputTree
-  { line:48, tree:[{data:10,left:2,right:1},{data:11,left:-1,right:4},{data:5,left:3,right:5},{data:1,left:-1,right:-1},{data:20,left:6,right:-1},{data:7,left:-1,right:-1},{data:15,left:-1,right:-1}], hl:-1,
+    { line:48, tree:[{data:10,left:2,right:1},{data:11,left:-1,right:4},{data:5,left:3,right:5},{data:1,left:-1,right:-1},{data:20,left:6,right:-1},{data:7,left:-1,right:-1},{data:15,left:-1,right:-1}], hl:-1,
     msg:"<code>OutputTree()</code> — prints each node as <strong>Left,Data,Right</strong>:<br>2,10,1 | -1,11,4 | 3,5,5 | -1,1,-1 | 6,20,-1 | -1,7,-1 | -1,15,-1" },
 ];
 
@@ -766,13 +724,10 @@ makeController(
   resetTreeSection
 );
 
-
-
 // ══════════════════════════════════════════════════════════════
 //  INTERACTIVE MODE — Skulpt Python + @visualize tag
 // ══════════════════════════════════════════════════════════════
 
-// ── Mode toggle ───────────────────────────────────────────────
 function setupModeToggle(name) {
   const btn         = document.getElementById(`${name}-mode-toggle`);
   const stepDiv     = document.getElementById(`${name}-step-mode`);
@@ -792,13 +747,11 @@ setupModeToggle('stack');
 setupModeToggle('queue');
 setupModeToggle('tree');
 
-// Mark all as ready immediately — Skulpt needs no loading
 document.querySelectorAll('.pyodide-status').forEach(el => {
   el.textContent = '✓ Python ready';
   el.classList.add('ready');
 });
 
-// ── Skulpt runner ─────────────────────────────────────────────
 function runSkulpt(code) {
   return new Promise((resolve, reject) => {
     let output = '';
@@ -816,21 +769,19 @@ function runSkulpt(code) {
   });
 }
 
-// ── Core visualizer ───────────────────────────────────────────
-// Instruments user code to snapshot watched variable after each line,
-// then collects results via print() and animates them.
-async function runVisualize(userCode, diagramEl, calloutEl, statusEl, renderFn) {
+async function runVisualize(userCode, diagramEl, calloutEl, statusEl, renderFn, runBtn) {
+  if (runBtn) runBtn.disabled = true;
   const tagMatch = userCode.match(/#\s*@visualize\s+(\w+)/);
   if (!tagMatch) {
     calloutEl.innerHTML = `<span style="color:#ff5a5a">Add <code># @visualize YourVarName</code> anywhere in your code.</span>`;
+    if (runBtn) runBtn.disabled = false;
     return;
   }
   const varName = tagMatch[1];
 
   const lines = userCode.split('\n');
   const out = [];
-  // Pure-Python JSON serializer (Skulpt does not support the json module)
-  out.push('def _dumps(obj):');
+    out.push('def _dumps(obj):');
   out.push('    if isinstance(obj, bool):');
   out.push('        if obj:');
   out.push('            return "true"');
@@ -854,8 +805,7 @@ async function runVisualize(userCode, diagramEl, calloutEl, statusEl, renderFn) 
   out.push('            items.append(_dumps(str(k)) + ": " + _dumps(obj[k]))');
   out.push('        return "{" + ", ".join(items) + "}"');
   out.push('    return _dumps(str(obj))');
-  // Deep-copy helper so nested lists (e.g. tree arrays) are snapshotted by value
-  out.push('def _deepcopy(obj):');
+    out.push('def _deepcopy(obj):');
   out.push('    if isinstance(obj, list):');
   out.push('        return [_deepcopy(x) for x in obj]');
   out.push('    if isinstance(obj, dict):');
@@ -911,12 +861,16 @@ async function runVisualize(userCode, diagramEl, calloutEl, statusEl, renderFn) 
 
     statusEl.textContent = '✓ Python ready';
     statusEl.classList.add('ready');
+    if (runBtn) runBtn.disabled = false;
 
     let i = 0;
     function play() {
       if (i >= steps.length) {
-        const last = steps[steps.length - 1].snap.filter(v => v !== -1 && v !== '' && v !== null);
-        calloutEl.innerHTML = `✅ Done — <strong>${varName}</strong> has ${last.length} item(s)`;
+        const lastSnap = steps[steps.length - 1].snap;
+        const count = Array.isArray(lastSnap[0])
+          ? lastSnap.filter(v => Array.isArray(v) && !(v[0] === -1 && v[1] === -1 && v[2] === -1)).length
+          : lastSnap.filter(v => v !== -1 && v !== '' && v !== null).length;
+        calloutEl.innerHTML = `✅ Done — <strong>${varName}</strong> has ${count} item(s)`;
         return;
       }
       const { snap, label } = steps[i];
@@ -930,12 +884,11 @@ async function runVisualize(userCode, diagramEl, calloutEl, statusEl, renderFn) 
   } catch (e) {
     statusEl.textContent = '✗ Error';
     statusEl.classList.add('error');
+    if (runBtn) runBtn.disabled = false;
     const msg = (e.toString().match(/SyntaxError.*|NameError.*|TypeError.*|ValueError.*/) || [e.toString()])[0];
     calloutEl.innerHTML = `<span style="color:#ff5a5a">Error: ${msg}</span>`;
   }
 }
-
-// ── Render helpers ────────────────────────────────────────────
 
 function renderInteractiveArray(diagramEl, snap) {
   diagramEl.innerHTML = '';
@@ -1126,54 +1079,53 @@ function renderInteractiveTree(diagramEl, snap, varName) {
   diagramEl.appendChild(table);
 }
 
-// ── Wire up Run buttons ───────────────────────────────────────
-document.getElementById('array-run').addEventListener('click', () => {
+document.getElementById('array-run').addEventListener('click', function() {
   runVisualize(
     document.getElementById('array-editor').value,
     document.getElementById('array-interactive-diagram'),
     document.getElementById('array-interactive-callout'),
     document.getElementById('array-py-status'),
-    renderInteractiveArray
+    renderInteractiveArray, this
   );
 });
 
-document.getElementById('stack-run').addEventListener('click', () => {
+document.getElementById('stack-run').addEventListener('click', function() {
   runVisualize(
     document.getElementById('stack-editor').value,
     document.getElementById('stack-interactive-diagram'),
     document.getElementById('stack-interactive-callout'),
     document.getElementById('stack-py-status'),
-    renderInteractiveStack
+    renderInteractiveStack, this
   );
 });
 
-document.getElementById('queue-run').addEventListener('click', () => {
+document.getElementById('queue-run').addEventListener('click', function() {
   runVisualize(
     document.getElementById('queue-editor').value,
     document.getElementById('queue-interactive-diagram'),
     document.getElementById('queue-interactive-callout'),
     document.getElementById('queue-py-status'),
-    renderInteractiveQueue
+    renderInteractiveQueue, this
   );
 });
 
-document.getElementById('linkedlist-run').addEventListener('click', () => {
+document.getElementById('linkedlist-run').addEventListener('click', function() {
   runVisualize(
     document.getElementById('linkedlist-editor').value,
     document.getElementById('linkedlist-interactive-diagram'),
     document.getElementById('linkedlist-interactive-callout'),
     document.getElementById('linkedlist-py-status'),
-    renderInteractiveLinkedList
+    renderInteractiveLinkedList, this
   );
 });
 
-document.getElementById('tree-run').addEventListener('click', () => {
+document.getElementById('tree-run').addEventListener('click', function() {
   runVisualize(
     document.getElementById('tree-editor').value,
     document.getElementById('tree-interactive-diagram'),
     document.getElementById('tree-interactive-callout'),
     document.getElementById('tree-py-status'),
-    renderInteractiveTree
+    renderInteractiveTree, this
   );
 });
 
@@ -1181,8 +1133,7 @@ document.getElementById('tree-run').addEventListener('click', () => {
 //  SPEED SLIDER — injected into every .controls row
 // ══════════════════════════════════════════════════════════════
 function injectSpeedSliders() {
-  document.querySelectorAll('.controls').forEach(row => {
-    // Don't double-inject
+  document.querySelectorAll('.controls, .editor-controls').forEach(row => {
     if (row.querySelector('.speed-wrap')) return;
     const wrap = document.createElement('div');
     wrap.className = 'speed-wrap';
@@ -1194,11 +1145,8 @@ function injectSpeedSliders() {
       <span class="speed-label" aria-hidden="true">⚡</span>
     `;
     row.appendChild(wrap);
-
     wrap.querySelector('.speed-slider').addEventListener('input', e => {
-      // Invert: slider right (2000) = fast = low delay (200ms)
       stepDelay = 2200 - Number(e.target.value);
-      // Keep all sliders in sync
       document.querySelectorAll('.speed-slider').forEach(s => { s.value = e.target.value; });
     });
   });

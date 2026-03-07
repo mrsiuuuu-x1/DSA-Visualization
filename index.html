@@ -131,18 +131,51 @@ arr.insert(1, 99)
       <div class="viz-layout">
         <div class="code-panel">
           <div class="panel-label">Your Python Code
-            <span class="panel-hint">Write any Python — add <code># @visualize varName</code> to watch a variable</span>
+            <span class="panel-hint">Call <code>snapshot = ll.to_list()</code> after each operation, then <code># @visualize snapshot</code></span>
           </div>
-          <textarea class="code-editor" id="linkedlist-editor" aria-label="Linked List code editor" title="Linked List code editor" spellcheck="false">ll = []
+          <textarea class="code-editor" id="linkedlist-editor" aria-label="Linked List code editor" title="Linked List code editor" spellcheck="false">class Node:
+    def __init__(self, val):
+        self.val = val
+        self.next = None
+
+class LinkedList:
+    def __init__(self):
+        self.head = None
+
+    def append(self, val):
+        new = Node(val)
+        if not self.head:
+            self.head = new
+            return
+        curr = self.head
+        while curr.next:
+            curr = curr.next
+        curr.next = new
+
+    def to_list(self):
+        result = []
+        curr = self.head
+        while curr:
+            result.append(curr.val)
+            curr = curr.next
+        return result
+
+ll = LinkedList()
+snapshot = ll.to_list()
 
 ll.append(10)
-ll.append(20)
-ll.append(30)
-ll.append(40)
-ll.pop()
-ll.insert(1, 99)
+snapshot = ll.to_list()
 
-# @visualize ll</textarea>
+ll.append(20)
+snapshot = ll.to_list()
+
+ll.append(30)
+snapshot = ll.to_list()
+
+ll.append(5)
+snapshot = ll.to_list()
+
+# @visualize snapshot</textarea>
           <div class="editor-controls">
             <button class="run-btn" id="linkedlist-run">▶ Run</button>
             <span class="pyodide-status" id="linkedlist-py-status">Loading Python...</span>
@@ -433,6 +466,6 @@ Insert(20)
   </a>
 </footer>
 
-<script src="app.js?v=7"></script>
+<script src="app.js?v=10"></script>
 </body>
 </html>

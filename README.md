@@ -11,7 +11,7 @@ An interactive, browser-based visualizer for learning data structures through **
 ## Data Structures Covered
 
 | Section | Implementation |
-|---|---|
+| --- | --- |
 | **Array** | Python list — append, access by index, pop, insert |
 | **Linked List** | Singly linked list with Node class and next pointers |
 | **Stack** | Array-based stack using `TopOfStack` integer pointer |
@@ -23,12 +23,13 @@ An interactive, browser-based visualizer for learning data structures through **
 ## Features
 
 - **Step-by-step execution** — walk through each line of Python code one at a time
+- **Interactive mode** — write your own Python code, tag a variable with `# @visualize`, and watch it animate live (powered by Skulpt)
 - **Live diagrams** — watch the data structure update as each operation runs
-- **Explanatory callouts** — every step has a plain-English explanation of what's happening
+- **Explanatory callouts** — every step has a plain-English explanation
 - **Auto-play mode** — step through automatically at a set interval
-- **Syntax highlighting** — clean, readable Python code with colour-coded keywords
-- **5 dedicated sections** — each data structure has its own independent page and controls
-- **BT array table** — visualizes the underlying `__Tree` array alongside the tree diagram
+- **Speed slider** — control animation speed from slow to fast in real time
+- **Syntax highlighting** — colour-coded Python keywords, functions, strings, and numbers
+- **BT array table** — visualizes the underlying `__Tree` array alongside the SVG tree diagram
 - **Stack & Queue pointer display** — shows `TopOfStack`, `HeadPointer`, `TailPointer` updating live
 
 ---
@@ -62,6 +63,7 @@ DSA-Visualization/
 ## Tech Stack
 
 - Vanilla HTML, CSS, JavaScript — zero dependencies, zero build step
+- [Skulpt](https://skulpt.org/) — in-browser Python interpreter for Interactive Mode
 - SVG for Binary Tree rendering
 - Google Fonts: JetBrains Mono + Syne
 - Hosted via GitHub Pages
@@ -71,7 +73,6 @@ DSA-Visualization/
 ## Roadmap
 
 - [ ] Sorting algorithms (Insertion Sort, Bubble Sort)
-- [ ] User-input mode — insert your own values
 - [ ] Light theme toggle
 - [ ] Hash Tables
 - [ ] Heap / Priority Queue
