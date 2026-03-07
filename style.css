@@ -627,21 +627,6 @@ footer {
   margin-bottom: .4rem;
 }
 
-.edit-code-btn {
-  font-family: var(--mono);
-  font-size: .72rem;
-  font-weight: 600;
-  padding: .25rem .75rem;
-  background: transparent;
-  border: 1px solid var(--border);
-  color: var(--text-dim);
-  border-radius: 5px;
-  cursor: pointer;
-  margin-bottom: .4rem;
-  transition: border-color .2s, color .2s;
-}
-.edit-code-btn:hover { border-color: var(--accent); color: var(--accent); }
-
 .editor-controls {
   display: flex;
   align-items: center;
@@ -694,4 +679,19 @@ footer {
   color: var(--text-dim);
   font-family: var(--mono);
   font-size: .8rem;
+}
+/* ── Inline hint ──────────────────────────────── */
+.inline-hint {
+  font-family: var(--mono);
+  font-size: .72rem;
+  color: #f1a000;
+  background: rgba(241,160,0,0.08);
+  border: 1px solid rgba(241,160,0,0.3);
+  border-radius: 6px;
+  padding: .4rem .8rem;
+  margin-top: .3rem;
+  line-height: 1.5;
+}
+.inline-hint code, .inline-hint b {
+  color: #f1a000;
 }

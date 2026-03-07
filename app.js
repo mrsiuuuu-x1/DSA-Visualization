@@ -804,6 +804,52 @@ document.querySelectorAll('.pyodide-status').forEach(el => {
   el.classList.add('ready');
 });
 
+function smartErrorMsg(rawError, varName, userCode) {
+  const e = rawError.toString();
+  if (varName && /^[A-Z]/.test(varName))
+    return `<b>${varName}</b> looks like a class name, not a variable. Tag a variable instead — e.g. add a <code>snapshot()</code> method and use <code># @visualize snapshot</code>.`;
+  if (/import/.test(userCode))
+    return `Skulpt (the in-browser Python engine) doesn't support most <code>import</code> statements. Remove the import and use plain Python instead.`;
+  const nameMatch = e.match(/NameError.*name '(\w+)'/);
+  if (nameMatch) {
+    const n = nameMatch[1];
+    if (/^[A-Z]/.test(n))
+      return `<b>${n}</b> is a class, not a variable — you can't visualize it directly. Add a <code>snapshot()</code> or <code>to_list()</code> method and tag that instead.`;
+    return `Variable <b>${n}</b> not found. Make sure the name in <code># @visualize ${n}</code> matches exactly.`;
+  }
+  const attrMatch = e.match(/AttributeError.*'(\w+)'/);
+  if (attrMatch) return `AttributeError on <b>${attrMatch[1]}</b> — check your method names and that the object is initialised before use.`;
+  if (/IndentationError/.test(e)) return `Indentation error — check your spacing. Python uses 4 spaces per indent level.`;
+  if (/SyntaxError/.test(e)) return `Syntax error — look for missing colons, brackets, or quotes.`;
+  if (/TypeError/.test(e)) return `Type error — you may be passing the wrong type of value to a function.`;
+  const cleaned = e.replace(/^.*?Error/, m => `<b>${m}</b>`).split('\n')[0];
+  return cleaned || e;
+}
+
+function setupInlineHints(editorId) {
+  const editor = document.getElementById(editorId);
+  if (!editor) return;
+  const hint = document.createElement('div');
+  hint.className = 'inline-hint';
+  hint.style.display = 'none';
+  editor.parentElement.insertBefore(hint, editor.nextSibling);
+  editor.addEventListener('input', () => {
+    const code = editor.value;
+    const vizMatch = code.match(/#\s*@visualize\s+(\w+)/);
+    if (/^\s*import\s/m.test(code)) {
+      hint.style.display = '';
+      hint.innerHTML = `⚠ <code>import</code> statements aren't supported — remove them before running.`;
+      return;
+    }
+    if (vizMatch && /^[A-Z]/.test(vizMatch[1])) {
+      hint.style.display = '';
+      hint.innerHTML = `⚠ <b>${vizMatch[1]}</b> looks like a class name — visualize a variable instead (e.g. a <code>snapshot()</code> list).`;
+      return;
+    }
+    hint.style.display = 'none';
+  });
+}
+
 function runSkulpt(code) {
   return new Promise((resolve, reject) => {
     let output = '';
@@ -824,35 +870,17 @@ function runSkulpt(code) {
 async function runVisualize(userCode, diagramEl, calloutEl, statusEl, renderFn, runBtn, codeViewId, editorId) {
   if (runBtn) runBtn.disabled = true;
 
+  // Clear any inline hint
+  const editorElForHint = editorId ? document.getElementById(editorId) : null;
+  if (editorElForHint) {
+    const hint = editorElForHint.parentElement.querySelector('.inline-hint');
+    if (hint) hint.style.display = 'none';
+  }
+
   const codeViewEl = codeViewId ? document.getElementById(codeViewId) : null;
   const editorEl   = editorId   ? document.getElementById(editorId)   : null;
-
-  function showEditor() {
-    if (codeViewEl) codeViewEl.style.display = 'none';
-    if (editorEl)   editorEl.style.display = '';
-    const btn = codeViewEl && codeViewEl.parentElement.querySelector('.edit-code-btn');
-    if (btn) btn.style.display = 'none';
-  }
-
-  function showCodeView() {
-    if (editorEl)   editorEl.style.display = 'none';
-    if (codeViewEl) codeViewEl.style.display = '';
-    let btn = codeViewEl.parentElement.querySelector('.edit-code-btn');
-    if (!btn) {
-      btn = document.createElement('button');
-      btn.className = 'edit-code-btn';
-      btn.textContent = '✎ Edit';
-      btn.title = 'Go back to editing';
-      codeViewEl.parentElement.insertBefore(btn, codeViewEl.nextSibling);
-    }
-    btn.style.display = '';
-    btn.onclick = () => {
-      showEditor();
-      codeViewEl.querySelectorAll('.code-line').forEach(l => l.classList.remove('active', 'done'));
-    };
-  }
-
-  showEditor();
+  if (codeViewEl) codeViewEl.style.display = 'none';
+  if (editorEl)   editorEl.style.display = '';
 
   const tagMatch = userCode.match(/#\s*@visualize\s+(\w+)/);
   if (!tagMatch) {
@@ -955,7 +983,8 @@ async function runVisualize(userCode, diagramEl, calloutEl, statusEl, renderFn, 
 
     if (codeViewEl && editorEl) {
       renderCode(codeViewId, lines);
-      showCodeView();
+      editorEl.style.display = 'none';
+      codeViewEl.style.display = '';
     }
 
     let i = 0;
@@ -985,9 +1014,9 @@ async function runVisualize(userCode, diagramEl, calloutEl, statusEl, renderFn, 
     statusEl.textContent = '✗ Error';
     statusEl.classList.add('error');
     if (runBtn) runBtn.disabled = false;
-    showEditor();
-    const msg = (e.toString().match(/SyntaxError.*|NameError.*|TypeError.*|ValueError.*/) || [e.toString()])[0];
-    calloutEl.innerHTML = `<span style="color:#ff5a5a">Error: ${msg}</span>`;
+    if (codeViewEl) codeViewEl.style.display = 'none';
+    if (editorEl)   editorEl.style.display = '';
+    calloutEl.innerHTML = `<span style="color:#ff5a5a">${smartErrorMsg(e, varName, userCode)}</span>`;
   }
 }
 
@@ -1259,3 +1288,9 @@ function injectSpeedSliders() {
 }
 
 injectSpeedSliders();
+
+setupInlineHints('array-editor');
+setupInlineHints('linkedlist-editor');
+setupInlineHints('stack-editor');
+setupInlineHints('queue-editor');
+setupInlineHints('tree-editor');
