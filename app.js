@@ -851,16 +851,22 @@ setupModeToggle('queue');
 async function runPython(code, scaffold) {
   if (!pyodideReady) return null;
   try {
-    // Reset namespace each run
-    await pyodide.runPythonAsync(`
-import sys, io
-_events = []
-_stdout = io.StringIO()
-`);
+    await pyodide.runPythonAsync(`_events = []`);
     const full = scaffold + '\n' + code;
     await pyodide.runPythonAsync(full);
-    const events = pyodide.globals.get('_events').toJs();
-    return { events, error: null };
+    // Convert Python list of tuples to JS arrays
+    const raw = pyodide.globals.get('_events');
+    const events = raw.toJs({ dict_converter: Object.fromEntries });
+    // Each event is a Map or Array — normalize to plain arrays
+    const normalized = [];
+    for (const e of events) {
+      if (Array.isArray(e)) {
+        normalized.push(e.map(v => (v && v.toJs) ? v.toJs() : v));
+      } else {
+        normalized.push(e);
+      }
+    }
+    return { events: normalized, error: null };
   } catch (e) {
     return { events: [], error: e.message };
   }
@@ -868,11 +874,6 @@ _stdout = io.StringIO()
 
 // ── ARRAY interactive ────────────────────────────────────────
 const arrayScaffold = `
-_arr = []
-_orig_append = list.append
-_orig_pop    = list.pop
-_orig_insert = list.insert
-
 class TrackedList(list):
     def append(self, v):
         super().append(v)
@@ -887,10 +888,13 @@ class TrackedList(list):
 
 arr = TrackedList()
 _events.append(('init', [], -1))
+# --- user code below (arr = [] lines are ignored, arr is already tracked) ---
 `;
 
 document.getElementById('array-run').addEventListener('click', async () => {
-  const code = document.getElementById('array-editor').value;
+  const rawCode = document.getElementById('array-editor').value;
+  // Strip arr = [] since arr is already a TrackedList from the scaffold
+  const code = rawCode.split('\n').filter(l => !/^\s*arr\s*=\s*\[\s*\]/.test(l)).join('\n');
   const statusEl = document.getElementById('array-py-status');
   const diagramEl = document.getElementById('array-interactive-diagram');
   const calloutEl = document.getElementById('array-interactive-callout');
@@ -900,29 +904,31 @@ document.getElementById('array-run').addEventListener('click', async () => {
 
   const result = await runPython(code, arrayScaffold);
 
-  if (result.error) {
+  if (!result || result.error) {
     statusEl.textContent = '✗ Error';
     statusEl.classList.add('error');
-    calloutEl.innerHTML = `<span style="color:#ff5a5a">Error: ${result.error.split('\n').pop()}</span>`;
+    const msg = result ? result.error.split('\n').pop() : 'Python not ready';
+    calloutEl.innerHTML = `<span style="color:#ff5a5a">Error: ${msg}</span>`;
     return;
   }
 
   statusEl.textContent = '✓ Python ready';
   statusEl.classList.add('ready');
 
-  // Animate steps
   let step = 0;
   diagramEl.innerHTML = '';
   calloutEl.innerHTML = 'Running...';
 
   function playStep() {
     if (step >= result.events.length) return;
-    const [op, arr, hl] = result.events[step];
+    const ev  = result.events[step];
+    const op  = ev[0];
+    const arr = Array.isArray(ev[1]) ? ev[1] : Array.from(ev[1] || []);
+    const hl  = ev[2];
 
-    // Render array boxes
     diagramEl.innerHTML = '';
     if (arr.length === 0) {
-      diagramEl.innerHTML = '<span style="color:var(--text-dim);font-family:var(--mono);font-size:.8rem">[ empty ]</span>';
+      diagramEl.innerHTML = '<span class="diagram-placeholder">[ empty ]</span>';
     } else {
       const row = document.createElement('div');
       row.style.cssText = 'display:flex;gap:.5rem;flex-wrap:wrap;justify-content:center;';
@@ -990,10 +996,11 @@ document.getElementById('stack-run').addEventListener('click', async () => {
 
   const result = await runPython(code, stackScaffold);
 
-  if (result.error) {
+  if (!result || result.error) {
     statusEl.textContent = '✗ Error';
     statusEl.classList.add('error');
-    calloutEl.innerHTML = `<span style="color:#ff5a5a">Error: ${result.error.split('\n').pop()}</span>`;
+    const msg = result ? result.error.split('\n').pop() : 'Python not ready';
+    calloutEl.innerHTML = `<span style="color:#ff5a5a">Error: ${msg}</span>`;
     return;
   }
 
@@ -1004,7 +1011,12 @@ document.getElementById('stack-run').addEventListener('click', async () => {
 
   function playStep() {
     if (step >= result.events.length) return;
-    const [op, items, top, val, note] = result.events[step];
+    const ev    = result.events[step];
+    const op    = ev[0];
+    const items = Array.isArray(ev[1]) ? ev[1] : Array.from(ev[1] || []);
+    const top   = ev[2];
+    const val   = ev[3];
+    const note  = ev[4];
 
     // Render stack
     diagramEl.innerHTML = '';
@@ -1104,10 +1116,11 @@ document.getElementById('queue-run').addEventListener('click', async () => {
 
   const result = await runPython(code, queueScaffold);
 
-  if (result.error) {
+  if (!result || result.error) {
     statusEl.textContent = '✗ Error';
     statusEl.classList.add('error');
-    calloutEl.innerHTML = `<span style="color:#ff5a5a">Error: ${result.error.split('\n').pop()}</span>`;
+    const msg = result ? result.error.split('\n').pop() : 'Python not ready';
+    calloutEl.innerHTML = `<span style="color:#ff5a5a">Error: ${msg}</span>`;
     return;
   }
 
@@ -1118,7 +1131,14 @@ document.getElementById('queue-run').addEventListener('click', async () => {
 
   function playStep() {
     if (step >= result.events.length) return;
-    const [op, items, head, tail, count, val, note] = result.events[step];
+    const ev    = result.events[step];
+    const op    = ev[0];
+    const items = Array.isArray(ev[1]) ? ev[1] : Array.from(ev[1] || []);
+    const head  = ev[2];
+    const tail  = ev[3];
+    const count = ev[4];
+    const val   = ev[5];
+    const note  = ev[6];
 
     diagramEl.innerHTML = '';
 
