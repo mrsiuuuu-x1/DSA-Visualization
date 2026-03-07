@@ -826,8 +826,33 @@ async function runVisualize(userCode, diagramEl, calloutEl, statusEl, renderFn, 
 
   const codeViewEl = codeViewId ? document.getElementById(codeViewId) : null;
   const editorEl   = editorId   ? document.getElementById(editorId)   : null;
-  if (codeViewEl) codeViewEl.style.display = 'none';
-  if (editorEl)   editorEl.style.display = '';
+
+  function showEditor() {
+    if (codeViewEl) codeViewEl.style.display = 'none';
+    if (editorEl)   editorEl.style.display = '';
+    const btn = codeViewEl && codeViewEl.parentElement.querySelector('.edit-code-btn');
+    if (btn) btn.style.display = 'none';
+  }
+
+  function showCodeView() {
+    if (editorEl)   editorEl.style.display = 'none';
+    if (codeViewEl) codeViewEl.style.display = '';
+    let btn = codeViewEl.parentElement.querySelector('.edit-code-btn');
+    if (!btn) {
+      btn = document.createElement('button');
+      btn.className = 'edit-code-btn';
+      btn.textContent = '✎ Edit';
+      btn.title = 'Go back to editing';
+      codeViewEl.parentElement.insertBefore(btn, codeViewEl.nextSibling);
+    }
+    btn.style.display = '';
+    btn.onclick = () => {
+      showEditor();
+      codeViewEl.querySelectorAll('.code-line').forEach(l => l.classList.remove('active', 'done'));
+    };
+  }
+
+  showEditor();
 
   const tagMatch = userCode.match(/#\s*@visualize\s+(\w+)/);
   if (!tagMatch) {
@@ -839,7 +864,7 @@ async function runVisualize(userCode, diagramEl, calloutEl, statusEl, renderFn, 
 
   const lines = userCode.split('\n');
   const out = [];
-  out.push('def _dumps(obj):');
+    out.push('def _dumps(obj):');
   out.push('    if isinstance(obj, bool):');
   out.push('        if obj:');
   out.push('            return "true"');
@@ -863,7 +888,7 @@ async function runVisualize(userCode, diagramEl, calloutEl, statusEl, renderFn, 
   out.push('            items.append(_dumps(str(k)) + ": " + _dumps(obj[k]))');
   out.push('        return "{" + ", ".join(items) + "}"');
   out.push('    return _dumps(str(obj))');
-  out.push('def _deepcopy(obj):');
+    out.push('def _deepcopy(obj):');
   out.push('    if isinstance(obj, list):');
   out.push('        return [_deepcopy(x) for x in obj]');
   out.push('    if isinstance(obj, dict):');
@@ -930,28 +955,7 @@ async function runVisualize(userCode, diagramEl, calloutEl, statusEl, renderFn, 
 
     if (codeViewEl && editorEl) {
       renderCode(codeViewId, lines);
-      editorEl.style.display = 'none';
-      codeViewEl.style.display = '';
-
-      // Show edit button if not already present
-      let editBtn = codeViewEl.parentElement.querySelector('.edit-code-btn');
-      if (!editBtn) {
-        editBtn = document.createElement('button');
-        editBtn.className = 'edit-code-btn';
-        editBtn.textContent = '✎ Edit';
-        editBtn.title = 'Go back to editing';
-        codeViewEl.parentElement.insertBefore(editBtn, codeViewEl.nextSibling);
-      }
-      editBtn.style.display = '';
-      editBtn.onclick = () => {
-        codeViewEl.style.display = 'none';
-        editorEl.style.display = '';
-        editBtn.style.display = 'none';
-        // Reset highlights
-        codeViewEl.querySelectorAll('.code-line').forEach(l => {
-          l.classList.remove('active', 'done');
-        });
-      };
+      showCodeView();
     }
 
     let i = 0;
@@ -981,10 +985,7 @@ async function runVisualize(userCode, diagramEl, calloutEl, statusEl, renderFn, 
     statusEl.textContent = '✗ Error';
     statusEl.classList.add('error');
     if (runBtn) runBtn.disabled = false;
-    if (codeViewEl) codeViewEl.style.display = 'none';
-    if (editorEl)   editorEl.style.display = '';
-    const editBtn = codeViewEl && codeViewEl.parentElement.querySelector('.edit-code-btn');
-    if (editBtn) editBtn.style.display = 'none';
+    showEditor();
     const msg = (e.toString().match(/SyntaxError.*|NameError.*|TypeError.*|ValueError.*/) || [e.toString()])[0];
     calloutEl.innerHTML = `<span style="color:#ff5a5a">Error: ${msg}</span>`;
   }
