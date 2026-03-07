@@ -193,10 +193,24 @@ const linkedCode = [
   "            curr = curr.next",
   "        curr.next = new",
   "",
+  "    def delete(self, val):",
+  "        if not self.head:",
+  "            return",
+  "        if self.head.val == val:",
+  "            self.head = self.head.next",
+  "            return",
+  "        curr = self.head",
+  "        while curr.next:",
+  "            if curr.next.val == val:",
+  "                curr.next = curr.next.next",
+  "                return",
+  "            curr = curr.next",
+  "",
   "ll = LinkedList()",
   "ll.append(10)",
   "ll.append(20)",
   "ll.append(30)",
+  "ll.delete(20)",
 ];
 
 const llDiagramEl = document.getElementById('linked-diagram');
@@ -223,18 +237,52 @@ function renderLinkedDiagram(nodes, highlightIdx = -1) {
     cont.appendChild(node);
   });
   llDiagramEl.appendChild(cont);
+
+  const table = document.createElement('div');
+  table.className = 'll-record-table';
+  table.style.cssText = 'display:flex;flex-direction:column;gap:4px;margin-top:12px;width:100%;overflow-x:auto;';
+
+  const header = document.createElement('div');
+  header.style.cssText = 'display:flex;gap:2px;font-family:var(--mono);font-size:.65rem;color:var(--text-dim);';
+  header.innerHTML = '<div style="width:36px;text-align:center">field</div>'
+    + nodes.map((_,i) => `<div style="width:68px;text-align:center">Node ${i}</div>`).join('');
+  table.appendChild(header);
+
+  const valRow = document.createElement('div');
+  valRow.style.cssText = 'display:flex;gap:2px;font-family:var(--mono);font-size:.72rem;font-weight:700;';
+  valRow.innerHTML = '<div style="width:36px;text-align:right;color:var(--text-dim);padding-right:4px;font-weight:400;font-size:.65rem">val</div>'
+    + nodes.map((v,i) => `<div style="width:68px;text-align:center;padding:3px 0;background:var(--surface2);border-radius:4px;border:1px solid ${i===highlightIdx?'var(--accent2)':'var(--border)'};color:${i===highlightIdx?'var(--accent2)':'var(--text)'}">${v}</div>`).join('');
+  table.appendChild(valRow);
+
+  const nextRow = document.createElement('div');
+  nextRow.style.cssText = 'display:flex;gap:2px;font-family:var(--mono);font-size:.68rem;';
+  nextRow.innerHTML = '<div style="width:36px;text-align:right;color:var(--text-dim);padding-right:4px;font-weight:400;font-size:.65rem">next</div>'
+    + nodes.map((_,i) => {
+      const isLast = i === nodes.length - 1;
+      const nxt = isLast ? 'None' : `→${nodes[i+1]}`;
+      return `<div style="width:68px;text-align:center;padding:3px 0;background:var(--surface2);border-radius:4px;border:1px solid var(--border);color:${isLast?'var(--text-dim)':'var(--accent2)'}">${nxt}</div>`;
+    }).join('');
+  table.appendChild(nextRow);
+
+  llDiagramEl.appendChild(table);
 }
 
 const llSteps = [
-  { line:0, nodes:[], hl:-1, msg:"<code>class Node</code> — each node holds a value and a <code>next</code> pointer" },
-  { line:1, nodes:[], hl:-1, msg:"<code>__init__</code> — store val, set next = None" },
-  { line:5, nodes:[], hl:-1, msg:"<code>class LinkedList</code> — wrapper class for the chain of nodes" },
+  { line:0, nodes:[], hl:-1, msg:"<code>class Node</code> — a <strong>record type</strong> with two fields: <code>val</code> (data) and <code>next</code> (pointer to next node)" },
+  { line:1, nodes:[], hl:-1, msg:"<code>__init__</code> — initialize the Node record: set <code>val</code>, set <code>next = None</code>" },
+  { line:5, nodes:[], hl:-1, msg:"<code>class LinkedList</code> — manages a chain of Node records via a <code>head</code> pointer" },
   { line:6, nodes:[], hl:-1, msg:"<code>self.head = None</code> — empty list: head points to nothing" },
-  { line:9, nodes:[], hl:-1, msg:"<code>append(val)</code> — method to add a node at the end" },
-  { line:19, nodes:[], hl:-1, msg:"<code>ll = LinkedList()</code> — create a new empty linked list" },
-  { line:20, nodes:[10], hl:0, msg:"<code>ll.append(10)</code> — head is None, so 10 becomes the head" },
-  { line:21, nodes:[10,20], hl:1, msg:"<code>ll.append(20)</code> — traverse to end, link 10 → 20" },
-  { line:22, nodes:[10,20,30], hl:2, msg:"<code>ll.append(30)</code> — traverse to end, link 20 → 30 → None" },
+  { line:9, nodes:[], hl:-1, msg:"<code>append(val)</code> — creates a new Node record and links it at the end of the chain" },
+  { line:19, nodes:[], hl:-1, msg:"<code>delete(val)</code> — finds the node with matching val and updates <code>next</code> pointers to bypass it" },
+  { line:32, nodes:[], hl:-1, msg:"<code>ll = LinkedList()</code> — create a new empty linked list" },
+  { line:33, nodes:[10], hl:0, msg:"<code>ll.append(10)</code> — head is None → Node(10) becomes head. Record: <code>{val:10, next:None}</code>" },
+  { line:34, nodes:[10,20], hl:1, msg:"<code>ll.append(20)</code> — traverse to end, set Node(10).next → Node(20). Record: <code>{val:20, next:None}</code>" },
+  { line:35, nodes:[10,20,30], hl:2, msg:"<code>ll.append(30)</code> — traverse to end, set Node(20).next → Node(30). Record: <code>{val:30, next:None}</code>" },
+  { line:36, nodes:[10,20,30], hl:-1, msg:"<code>ll.delete(20)</code> — search for the node with val=20 to remove it from the chain" },
+  { line:22, nodes:[10,20,30], hl:0, msg:"<code>self.head.val == 20?</code> — head.val is 10 ≠ 20. Move to traversal loop" },
+  { line:25, nodes:[10,20,30], hl:0, msg:"<code>curr = self.head</code> — start traversing from head: curr → Node(10)" },
+  { line:27, nodes:[10,20,30], hl:1, msg:"<code>curr.next.val == 20?</code> — Yes! Node(10).next is Node(20), and 20 == 20. Found it!" },
+  { line:28, nodes:[10,30], hl:0, msg:"<code>curr.next = curr.next.next</code> — Node(10).next now → Node(30), bypassing Node(20). <strong>Deletion complete!</strong>" },
 ];
 
 let llState = { prevLine: null };
@@ -739,6 +787,10 @@ function setupModeToggle(name) {
     btn.textContent = interactive ? '📖 Step Mode' : '⚡ Interactive Mode';
     stepDiv.style.display = interactive ? 'none' : 'block';
     interactDiv.classList.toggle('hidden', !interactive);
+    const cv = document.getElementById(`${name}-interactive-code`);
+    const ed = document.getElementById(`${name}-editor`);
+    if (cv) cv.style.display = 'none';
+    if (ed) ed.style.display = '';
   });
 }
 setupModeToggle('array');
@@ -769,8 +821,14 @@ function runSkulpt(code) {
   });
 }
 
-async function runVisualize(userCode, diagramEl, calloutEl, statusEl, renderFn, runBtn) {
+async function runVisualize(userCode, diagramEl, calloutEl, statusEl, renderFn, runBtn, codeViewId, editorId) {
   if (runBtn) runBtn.disabled = true;
+
+  const codeViewEl = codeViewId ? document.getElementById(codeViewId) : null;
+  const editorEl   = editorId   ? document.getElementById(editorId)   : null;
+  if (codeViewEl) codeViewEl.style.display = 'none';
+  if (editorEl)   editorEl.style.display = '';
+
   const tagMatch = userCode.match(/#\s*@visualize\s+(\w+)/);
   if (!tagMatch) {
     calloutEl.innerHTML = `<span style="color:#ff5a5a">Add <code># @visualize YourVarName</code> anywhere in your code.</span>`;
@@ -816,8 +874,10 @@ async function runVisualize(userCode, diagramEl, calloutEl, statusEl, renderFn, 
   out.push('    return obj');
   out.push('_snapshots = []');
   out.push('_labels = []');
+  out.push('_lineNums = []');
 
-  for (const line of lines) {
+  for (let li = 0; li < lines.length; li++) {
+    const line = lines[li];
     out.push(line);
     const s = line.trim();
     if (!s || s.startsWith('#') || /^(def |class |if |elif |else:|for |while |with |try:|except|finally:|return\b|pass\b|break\b|continue\b)/.test(s)) continue;
@@ -827,11 +887,12 @@ async function runVisualize(userCode, diagramEl, calloutEl, statusEl, renderFn, 
       `${indent}  _tmp = _deepcopy(${varName})\n` +
       `${indent}  _snapshots.append(_tmp)\n` +
       `${indent}  _labels.append(${JSON.stringify(s.slice(0, 60))})\n` +
+      `${indent}  _lineNums.append(${li})\n` +
       `${indent}except:\n` +
       `${indent}  pass`
     );
   }
-  out.push('print(_dumps({"snapshots": _snapshots, "labels": _labels}))');
+  out.push('print(_dumps({"snapshots": _snapshots, "labels": _labels, "lineNums": _lineNums}))');
 
   statusEl.textContent = 'Running...';
   statusEl.className = 'pyodide-status';
@@ -840,14 +901,17 @@ async function runVisualize(userCode, diagramEl, calloutEl, statusEl, renderFn, 
     const output = await runSkulpt(out.join('\n'));
 
     const lastLine = output.trim().split('\n').pop();
-    const { snapshots: rawSnaps, labels: rawLabels } = JSON.parse(lastLine);
+    const parsed = JSON.parse(lastLine);
+    const rawSnaps = parsed.snapshots;
+    const rawLabels = parsed.labels;
+    const rawLineNums = parsed.lineNums;
 
     const steps = [];
     let prev = null;
     for (let i = 0; i < rawSnaps.length; i++) {
       const key = JSON.stringify(rawSnaps[i]);
       if (key !== prev) {
-        steps.push({ snap: rawSnaps[i], label: rawLabels[i] });
+        steps.push({ snap: rawSnaps[i], label: rawLabels[i], line: rawLineNums && i < rawLineNums.length ? rawLineNums[i] : -1 });
         prev = key;
       }
     }
@@ -856,6 +920,7 @@ async function runVisualize(userCode, diagramEl, calloutEl, statusEl, renderFn, 
       calloutEl.innerHTML = `<span style="color:#ff5a5a">No changes on <code>${varName}</code>. Check the variable name matches exactly.</span>`;
       statusEl.textContent = '✓ Python ready';
       statusEl.classList.add('ready');
+      if (runBtn) runBtn.disabled = false;
       return;
     }
 
@@ -863,7 +928,14 @@ async function runVisualize(userCode, diagramEl, calloutEl, statusEl, renderFn, 
     statusEl.classList.add('ready');
     if (runBtn) runBtn.disabled = false;
 
+    if (codeViewEl && editorEl) {
+      renderCode(codeViewId, lines);
+      editorEl.style.display = 'none';
+      codeViewEl.style.display = '';
+    }
+
     let i = 0;
+    let playPrevLine = null;
     function play() {
       if (i >= steps.length) {
         const lastSnap = steps[steps.length - 1].snap;
@@ -873,9 +945,13 @@ async function runVisualize(userCode, diagramEl, calloutEl, statusEl, renderFn, 
         calloutEl.innerHTML = `✅ Done — <strong>${varName}</strong> has ${count} item(s)`;
         return;
       }
-      const { snap, label } = steps[i];
+      const { snap, label, line } = steps[i];
       renderFn(diagramEl, snap, varName);
       calloutEl.innerHTML = `<code>${label}</code>`;
+      if (codeViewEl && line >= 0) {
+        highlightLine(codeViewId, line, playPrevLine);
+        playPrevLine = line;
+      }
       i++;
       setTimeout(play, stepDelay);
     }
@@ -885,6 +961,8 @@ async function runVisualize(userCode, diagramEl, calloutEl, statusEl, renderFn, 
     statusEl.textContent = '✗ Error';
     statusEl.classList.add('error');
     if (runBtn) runBtn.disabled = false;
+    if (codeViewEl) codeViewEl.style.display = 'none';
+    if (editorEl)   editorEl.style.display = '';
     const msg = (e.toString().match(/SyntaxError.*|NameError.*|TypeError.*|ValueError.*/) || [e.toString()])[0];
     calloutEl.innerHTML = `<span style="color:#ff5a5a">Error: ${msg}</span>`;
   }
@@ -1085,7 +1163,8 @@ document.getElementById('array-run').addEventListener('click', function() {
     document.getElementById('array-interactive-diagram'),
     document.getElementById('array-interactive-callout'),
     document.getElementById('array-py-status'),
-    renderInteractiveArray, this
+    renderInteractiveArray, this,
+    'array-interactive-code', 'array-editor'
   );
 });
 
@@ -1095,7 +1174,8 @@ document.getElementById('stack-run').addEventListener('click', function() {
     document.getElementById('stack-interactive-diagram'),
     document.getElementById('stack-interactive-callout'),
     document.getElementById('stack-py-status'),
-    renderInteractiveStack, this
+    renderInteractiveStack, this,
+    'stack-interactive-code', 'stack-editor'
   );
 });
 
@@ -1105,7 +1185,8 @@ document.getElementById('queue-run').addEventListener('click', function() {
     document.getElementById('queue-interactive-diagram'),
     document.getElementById('queue-interactive-callout'),
     document.getElementById('queue-py-status'),
-    renderInteractiveQueue, this
+    renderInteractiveQueue, this,
+    'queue-interactive-code', 'queue-editor'
   );
 });
 
@@ -1115,7 +1196,8 @@ document.getElementById('linkedlist-run').addEventListener('click', function() {
     document.getElementById('linkedlist-interactive-diagram'),
     document.getElementById('linkedlist-interactive-callout'),
     document.getElementById('linkedlist-py-status'),
-    renderInteractiveLinkedList, this
+    renderInteractiveLinkedList, this,
+    'linkedlist-interactive-code', 'linkedlist-editor'
   );
 });
 
@@ -1125,7 +1207,8 @@ document.getElementById('tree-run').addEventListener('click', function() {
     document.getElementById('tree-interactive-diagram'),
     document.getElementById('tree-interactive-callout'),
     document.getElementById('tree-py-status'),
-    renderInteractiveTree, this
+    renderInteractiveTree, this,
+    'tree-interactive-code', 'tree-editor'
   );
 });
 
