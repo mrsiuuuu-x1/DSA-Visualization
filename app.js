@@ -244,7 +244,7 @@ function renderLinkedDiagram(nodes, highlightIdx = -1) {
 
   const header = document.createElement('div');
   header.style.cssText = 'display:flex;gap:2px;font-family:var(--mono);font-size:.65rem;color:var(--text-dim);';
-  header.innerHTML = '<div style="width:36px;text-align:center">rec</div>'
+  header.innerHTML = '<div style="width:36px;text-align:center">field</div>'
     + nodes.map((_,i) => `<div style="width:68px;text-align:center">Node ${i}</div>`).join('');
   table.appendChild(header);
 
@@ -911,7 +911,7 @@ async function runVisualize(userCode, diagramEl, calloutEl, statusEl, renderFn, 
     for (let i = 0; i < rawSnaps.length; i++) {
       const key = JSON.stringify(rawSnaps[i]);
       if (key !== prev) {
-        steps.push({ snap: rawSnaps[i], label: rawLabels[i], line: rawLineNums ? rawLineNums[i] : -1 });
+        steps.push({ snap: rawSnaps[i], label: rawLabels[i], line: rawLineNums && i < rawLineNums.length ? rawLineNums[i] : -1 });
         prev = key;
       }
     }
