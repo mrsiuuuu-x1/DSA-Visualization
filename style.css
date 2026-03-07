@@ -645,22 +645,6 @@ footer {
 }
 .gh-link:hover { color: var(--accent); }
 
-/* ── Progress bar (decorative) ──────────────────── */
-.progress-bar {
-  height: 3px;
-  background: var(--surface2);
-  border-radius: 2px;
-  margin-bottom: 1.4rem;
-  overflow: hidden;
-}
-
-.progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--accent), var(--accent2));
-  border-radius: 2px;
-  transition: width .4s ease;
-}
-
 /* ── Interactive Mode ─────────────────────────── */
 .mode-toggle-row {
   display: flex;

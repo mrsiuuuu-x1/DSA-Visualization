@@ -18,21 +18,25 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
 //  UTILITIES
 // ══════════════════════════════════════════════════════════════
 function syntaxHL(raw) {
-  // Strip inline comments, trim trailing whitespace
-  const code = raw.replace(/#.*$/, '').trimEnd();
-  // HTML-escape first
+  let comment = '';
+  let code = raw;
+  const commentIdx = raw.indexOf('#');
+  if (commentIdx !== -1) {
+    comment = raw.slice(commentIdx);
+    code = raw.slice(0, commentIdx).trimEnd();
+  }
   let s = code
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
-  // Strings (single-quoted only, non-greedy)
   s = s.replace(/'([^']*)'/g, (_, inner) => `<span class="str">'${inner}'</span>`);
-  // Keywords
   s = s.replace(/\b(def|class|return|if|else|elif|for|while|in|not|and|or|None|True|False|import|from|pass|self|break)\b/g, '<span class="kw">$1</span>');
-  // Function calls
   s = s.replace(/\b([A-Za-z_][A-Za-z0-9_]*)\s*(?=\()/g, '<span class="fn">$1</span>');
-  // Numbers (standalone, including -1)
   s = s.replace(/(^|[\s,=\[(<>!])(-?\d+)(?=[\s,\])<>!;+\-*\/]|$)/g, '$1<span class="num">$2</span>');
+  if (comment) {
+    const escaped = comment.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    s += (s ? ' ' : '') + `<span class="cmt">${escaped}</span>`;
+  }
   return s;
 }
 
@@ -302,11 +306,9 @@ const stackCode = [
 const stackDiagramEl = document.getElementById('stack-diagram');
 const stackCalloutEl = document.getElementById('stack-callout');
 
-// Renders stack + the array slots side by side
-function renderStackDiagram(items, topIdx, highlightSlot = -1) {
+function renderStackDiagram(items, topIdx) {
   stackDiagramEl.innerHTML = '';
 
-  // Left: visual stack
   const left = document.createElement('div');
   left.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:6px;min-width:120px;';
 
@@ -326,7 +328,6 @@ function renderStackDiagram(items, topIdx, highlightSlot = -1) {
     });
   }
 
-  // Right: TopOfStack indicator
   const right = document.createElement('div');
   right.style.cssText = 'display:flex;flex-direction:column;justify-content:center;gap:4px;font-family:var(--mono);font-size:.72rem;';
   right.innerHTML = `
@@ -412,7 +413,8 @@ const queueCode = [
   "        if NumberItems == 0:",
   "            TailPointer = -1",
   "            HeadPointer = -1",
-  "        HeadPointer += 1",
+  "        else:",
+  "            HeadPointer += 1",
   "        return item",
   "",
   "EnQueue(15)",
@@ -431,7 +433,6 @@ const queueCalloutEl = document.getElementById('queue-callout');
 function renderQueueDiagram(items, head, tail, count) {
   queueDiagramEl.innerHTML = '';
 
-  // Queue slots visual
   const top = document.createElement('div');
   top.style.cssText = 'display:flex;gap:4px;flex-wrap:wrap;justify-content:center;width:100%;';
 
@@ -449,7 +450,6 @@ function renderQueueDiagram(items, head, tail, count) {
   }
   queueDiagramEl.appendChild(top);
 
-  // Pointer info row
   const info = document.createElement('div');
   info.style.cssText = 'display:flex;gap:1.5rem;margin-top:.6rem;font-family:var(--mono);font-size:.72rem;justify-content:center;';
   info.innerHTML = `
@@ -467,13 +467,13 @@ const queueSteps = [
   { line:3,  items:[], head:-1, tail:-1, count:0, msg:"<code>NumberItems = 0</code> — queue is empty" },
   { line:5,  items:[], head:-1, tail:-1, count:0, msg:"<code>def EnQueue(val)</code> — if full (100 items) return False. First item sets both Head and Tail to 0; others just increment Tail" },
   { line:19, items:[], head:-1, tail:-1, count:0, msg:"<code>def DeQueue()</code> — if empty return 'False'. Read from Head, decrement count, increment HeadPointer" },
-  { line:32, items:[15], head:0, tail:0, count:1, msg:"<code>EnQueue(15)</code> — NumberItems was 0 → Head=0, Tail=0. Queue[0]=15. Count: 1" },
-  { line:33, items:[15,32], head:0, tail:1, count:2, msg:"<code>EnQueue(32)</code> — Tail: 0→1. Queue[1]=32. Count: 2" },
-  { line:34, items:[15,32,8], head:0, tail:2, count:3, msg:"<code>EnQueue(8)</code> — Tail: 1→2. Queue[2]=8. Count: 3" },
-  { line:35, items:[15,32,8,61], head:0, tail:3, count:4, msg:"<code>EnQueue(61)</code> — Tail: 2→3. Queue[3]=61. Count: 4" },
-  { line:36, items:[15,32,8,61,27], head:0, tail:4, count:5, msg:"<code>EnQueue(27)</code> — Tail: 3→4. Queue[4]=27. Count: 5" },
-  { line:38, items:[32,8,61,27], head:1, tail:4, count:4, msg:"<code>DeQueue()</code> — item = Queue[0] = 15. Head: 0→1. Count: 4. Returns 15" },
-  { line:39, items:[8,61,27], head:2, tail:4, count:3, msg:"<code>DeQueue()</code> — item = Queue[1] = 32. Head: 1→2. Count: 3. Returns 32" },
+  { line:33, items:[15], head:0, tail:0, count:1, msg:"<code>EnQueue(15)</code> — NumberItems was 0 → Head=0, Tail=0. Queue[0]=15. Count: 1" },
+  { line:34, items:[15,32], head:0, tail:1, count:2, msg:"<code>EnQueue(32)</code> — Tail: 0→1. Queue[1]=32. Count: 2" },
+  { line:35, items:[15,32,8], head:0, tail:2, count:3, msg:"<code>EnQueue(8)</code> — Tail: 1→2. Queue[2]=8. Count: 3" },
+  { line:36, items:[15,32,8,61], head:0, tail:3, count:4, msg:"<code>EnQueue(61)</code> — Tail: 2→3. Queue[3]=61. Count: 4" },
+  { line:37, items:[15,32,8,61,27], head:0, tail:4, count:5, msg:"<code>EnQueue(27)</code> — Tail: 3→4. Queue[4]=27. Count: 5" },
+  { line:39, items:[32,8,61,27], head:1, tail:4, count:4, msg:"<code>DeQueue()</code> — item = Queue[0] = 15. Head: 0→1. Count: 4. Returns 15" },
+  { line:40, items:[8,61,27], head:2, tail:4, count:3, msg:"<code>DeQueue()</code> — item = Queue[1] = 32. Head: 1→2. Count: 3. Returns 32" },
 ];
 
 let qState = { prevLine: null };
@@ -599,7 +599,6 @@ function computePositions(treeArr, rootIdx, W) {
 function renderBTDiagram(treeArr, highlightIdx = -1) {
   const diagramArea = document.getElementById('tree-diagram');
 
-  // Remove old table if exists
   const oldTable = diagramArea.querySelector('.bt-array-table');
   if (oldTable) oldTable.remove();
 
@@ -609,7 +608,6 @@ function renderBTDiagram(treeArr, highlightIdx = -1) {
   const W = treeSVG.clientWidth || 480;
   const positions = computePositions(treeArr, 0, W);
 
-  // Draw edges
   treeArr.forEach((n, i) => {
     [[n.left, 'left'],[n.right, 'right']].forEach(([childIdx]) => {
       if (childIdx === -1) return;
@@ -623,7 +621,6 @@ function renderBTDiagram(treeArr, highlightIdx = -1) {
     });
   });
 
-  // Draw nodes
   treeArr.forEach((n, i) => {
     const pos = positions[i];
     if (!pos) return;
@@ -634,7 +631,6 @@ function renderBTDiagram(treeArr, highlightIdx = -1) {
     const text = document.createElementNS('http://www.w3.org/2000/svg','text');
     text.setAttribute('x',pos.x); text.setAttribute('y',pos.y);
     text.setAttribute('class','tree-text'); text.textContent = n.data;
-    // Index label above node
     const idxLabel = document.createElementNS('http://www.w3.org/2000/svg','text');
     idxLabel.setAttribute('x',pos.x); idxLabel.setAttribute('y',pos.y - 28);
     idxLabel.setAttribute('class','tree-text');
@@ -644,33 +640,28 @@ function renderBTDiagram(treeArr, highlightIdx = -1) {
     treeSVG.appendChild(g);
   });
 
-  // Draw array table below SVG
   const table = document.createElement('div');
   table.className = 'bt-array-table';
   table.style.cssText = 'display:flex;flex-direction:column;gap:4px;margin-top:8px;width:100%;overflow-x:auto;';
 
-  // Header row
   const header = document.createElement('div');
   header.style.cssText = 'display:flex;gap:2px;font-family:var(--mono);font-size:.65rem;color:var(--text-dim);';
   header.innerHTML = '<div style="width:32px;text-align:center">idx</div>'
     + treeArr.map((_,i)=>`<div style="width:44px;text-align:center">[${i}]</div>`).join('');
   table.appendChild(header);
 
-  // Left pointer row
   const leftRow = document.createElement('div');
   leftRow.style.cssText = 'display:flex;gap:2px;font-family:var(--mono);font-size:.7rem;';
   leftRow.innerHTML = '<div style="width:32px;text-align:right;color:var(--text-dim);padding-right:4px">L</div>'
     + treeArr.map((n,i)=>`<div style="width:44px;text-align:center;padding:3px 0;background:var(--surface2);border-radius:4px;border:1px solid var(--border);color:${i===highlightIdx?'var(--accent2)':'var(--text-dim)'}">${n.left}</div>`).join('');
   table.appendChild(leftRow);
 
-  // Data row
   const dataRow = document.createElement('div');
   dataRow.style.cssText = 'display:flex;gap:2px;font-family:var(--mono);font-size:.75rem;font-weight:700;';
   dataRow.innerHTML = '<div style="width:32px;text-align:right;color:var(--text-dim);padding-right:4px">D</div>'
     + treeArr.map((n,i)=>`<div style="width:44px;text-align:center;padding:4px 0;background:var(--surface2);border-radius:4px;border:1px solid ${i===highlightIdx?'var(--accent)':'var(--border)'};color:${i===highlightIdx?'var(--accent)':'var(--text)'}">${n.data}</div>`).join('');
   table.appendChild(dataRow);
 
-  // Right pointer row
   const rightRow = document.createElement('div');
   rightRow.style.cssText = 'display:flex;gap:2px;font-family:var(--mono);font-size:.7rem;';
   rightRow.innerHTML = '<div style="width:32px;text-align:right;color:var(--text-dim);padding-right:4px">R</div>'
@@ -680,36 +671,6 @@ function renderBTDiagram(treeArr, highlightIdx = -1) {
   diagramArea.appendChild(table);
 }
 
-// Graph BFS layout — fixed positions
-const graphNodes = ['A','B','C','D','E','F'];
-const graphEdges = [['A','B'],['A','C'],['B','D'],['B','E'],['C','F'],['E','F']];
-const graphPos = { A:{x:250,y:40}, B:{x:130,y:110}, C:{x:370,y:110}, D:{x:60,y:200}, E:{x:200,y:200}, F:{x:340,y:200} };
-
-function renderGraphDiagram(visited, current = null) {
-  treeSVG.innerHTML = '';
-  // edges
-  graphEdges.forEach(([a,b]) => {
-    const pa = graphPos[a], pb = graphPos[b];
-    const line = document.createElementNS('http://www.w3.org/2000/svg','line');
-    line.setAttribute('x1',pa.x); line.setAttribute('y1',pa.y);
-    line.setAttribute('x2',pb.x); line.setAttribute('y2',pb.y);
-    line.setAttribute('class','tree-edge'+(visited.includes(a)&&visited.includes(b)?' active':''));
-    treeSVG.appendChild(line);
-  });
-  // nodes
-  graphNodes.forEach(n => {
-    const pos = graphPos[n];
-    const g = document.createElementNS('http://www.w3.org/2000/svg','g');
-    const c = document.createElementNS('http://www.w3.org/2000/svg','circle');
-    c.setAttribute('cx',pos.x); c.setAttribute('cy',pos.y); c.setAttribute('r',22);
-    c.setAttribute('class','tree-circle'+(n===current?' highlight':visited.includes(n)?' visited':''));
-    const t = document.createElementNS('http://www.w3.org/2000/svg','text');
-    t.setAttribute('x',pos.x); t.setAttribute('y',pos.y);
-    t.setAttribute('class','tree-text'); t.textContent = n;
-    g.appendChild(c); g.appendChild(t);
-    treeSVG.appendChild(g);
-  });
-}
 
 // Each step: {line, tree:[], hl:index, msg}
 // tree is array of {data, left, right} — matches __Tree array in code
@@ -800,10 +761,6 @@ makeController(
 );
 
 
-document.getElementById('tree-step-total').textContent = btSteps.length;
-
-
-
 
 // ══════════════════════════════════════════════════════════════
 //  INTERACTIVE MODE — Skulpt Python + @visualize tag
@@ -857,7 +814,6 @@ function runSkulpt(code) {
 // Instruments user code to snapshot watched variable after each line,
 // then collects results via print() and animates them.
 async function runVisualize(userCode, diagramEl, calloutEl, statusEl, renderFn) {
-  // 1. Extract @visualize variable name
   const tagMatch = userCode.match(/#\s*@visualize\s+(\w+)/);
   if (!tagMatch) {
     calloutEl.innerHTML = `<span style="color:#ff5a5a">Add <code># @visualize YourVarName</code> anywhere in your code.</span>`;
@@ -865,7 +821,6 @@ async function runVisualize(userCode, diagramEl, calloutEl, statusEl, renderFn) 
   }
   const varName = tagMatch[1];
 
-  // 2. Instrument: after every executable line, print a JSON snapshot
   const lines = userCode.split('\n');
   const out = [];
   // Pure-Python JSON serializer (Skulpt does not support the json module)
@@ -910,9 +865,7 @@ async function runVisualize(userCode, diagramEl, calloutEl, statusEl, renderFn) 
     out.push(line);
     const s = line.trim();
     if (!s || s.startsWith('#') || /^(def |class |if |elif |else:|for |while |with |try:|except|finally:|return\b|pass\b|break\b|continue\b)/.test(s)) continue;
-    // Get leading whitespace to preserve indentation inside functions/blocks
     const indent = line.match(/^(\s*)/)[0];
-    // After each executable line, try to snapshot the target variable
     out.push(
       `${indent}try:\n` +
       `${indent}  _tmp = _deepcopy(${varName})\n` +
@@ -922,7 +875,6 @@ async function runVisualize(userCode, diagramEl, calloutEl, statusEl, renderFn) 
       `${indent}  pass`
     );
   }
-  // Print results as JSON at the end
   out.push('print(_dumps({"snapshots": _snapshots, "labels": _labels}))');
 
   statusEl.textContent = 'Running...';
@@ -931,11 +883,9 @@ async function runVisualize(userCode, diagramEl, calloutEl, statusEl, renderFn) 
   try {
     const output = await runSkulpt(out.join('\n'));
 
-    // Parse the last line of output as JSON
     const lastLine = output.trim().split('\n').pop();
     const { snapshots: rawSnaps, labels: rawLabels } = JSON.parse(lastLine);
 
-    // Deduplicate consecutive identical snapshots
     const steps = [];
     let prev = null;
     for (let i = 0; i < rawSnaps.length; i++) {
@@ -1080,15 +1030,13 @@ function renderInteractiveLinkedList(diagramEl, snap) {
 
 function renderInteractiveTree(diagramEl, snap, varName) {
   diagramEl.innerHTML = '';
-  // snap is the raw tree array: each element is [left, data, right]
-  // Filter to only valid nodes (not [-1, -1, -1])
   const treeArr = [];
   for (let i = 0; i < snap.length; i++) {
     const item = snap[i];
     if (Array.isArray(item) && !(item[0] === -1 && item[1] === -1 && item[2] === -1)) {
       treeArr.push({ data: item[1], left: item[0], right: item[2] });
     } else {
-      break; // stop at first unused slot
+      break;
     }
   }
 
@@ -1097,7 +1045,6 @@ function renderInteractiveTree(diagramEl, snap, varName) {
     return;
   }
 
-  // SVG tree visualization
   const svgNS = 'http://www.w3.org/2000/svg';
   const svg = document.createElementNS(svgNS, 'svg');
   svg.setAttribute('width', '100%');
@@ -1143,7 +1090,6 @@ function renderInteractiveTree(diagramEl, snap, varName) {
 
   diagramEl.appendChild(svg);
 
-  // Array table below SVG
   const table = document.createElement('div');
   table.style.cssText = 'display:flex;flex-direction:column;gap:4px;margin-top:8px;width:100%;overflow-x:auto;';
 
