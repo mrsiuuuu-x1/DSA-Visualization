@@ -609,3 +609,103 @@ footer {
   border-radius: 2px;
   transition: width .4s ease;
 }
+
+/* ── Interactive Mode ─────────────────────────── */
+.mode-toggle-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: .8rem;
+}
+
+.mode-toggle-btn {
+  font-family: var(--mono);
+  font-size: .78rem;
+  font-weight: 600;
+  padding: .4rem 1rem;
+  background: transparent;
+  border: 1.5px solid var(--accent2);
+  color: var(--accent2);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background .2s, color .2s;
+  letter-spacing: .04em;
+}
+.mode-toggle-btn:hover,
+.mode-toggle-btn.active {
+  background: var(--accent2);
+  color: var(--bg);
+}
+
+.interactive-mode.hidden { display: none; }
+
+.code-editor {
+  width: 100%;
+  min-height: 220px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: .82rem;
+  line-height: 1.6;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: .8rem 1rem;
+  resize: vertical;
+  outline: none;
+  transition: border-color .2s;
+  tab-size: 4;
+}
+.code-editor:focus { border-color: var(--accent2); }
+
+.editor-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: .6rem;
+}
+
+.run-btn {
+  font-family: var(--mono);
+  font-size: .82rem;
+  font-weight: 700;
+  padding: .45rem 1.2rem;
+  background: var(--accent);
+  color: var(--bg);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: opacity .2s, transform .1s;
+  letter-spacing: .04em;
+}
+.run-btn:hover { opacity: .85; }
+.run-btn:active { transform: scale(.97); }
+.run-btn:disabled { opacity: .4; cursor: not-allowed; }
+
+.pyodide-status {
+  font-family: var(--mono);
+  font-size: .72rem;
+  color: var(--text-dim);
+}
+.pyodide-status.ready { color: var(--accent2); }
+.pyodide-status.error { color: #ff5a5a; }
+
+.panel-hint {
+  font-family: var(--mono);
+  font-size: .65rem;
+  color: var(--text-dim);
+  margin-left: .6rem;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.panel-hint code {
+  color: var(--accent2);
+  background: var(--surface2);
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
+.diagram-placeholder {
+  color: var(--text-dim);
+  font-family: var(--mono);
+  font-size: .8rem;
+}
