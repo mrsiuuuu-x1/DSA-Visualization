@@ -1,7 +1,3 @@
-/* ═══════════════════════════════════════════════════════════
-   sections/linkedlist.js — Linked List step mode + interactive
-═══════════════════════════════════════════════════════════ */
-
 const linkedCode = [
   "class Node:",
   "    def __init__(self, val):",
