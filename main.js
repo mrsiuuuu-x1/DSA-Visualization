@@ -30,6 +30,7 @@ setupModeToggle('linkedlist');
 setupModeToggle('stack');
 setupModeToggle('queue');
 setupModeToggle('tree');
+setupModeToggle('sorting');
 
 // Python status labels
 document.querySelectorAll('.pyodide-status').forEach(el => {
@@ -59,12 +60,13 @@ function injectSpeedSliders() {
 }
 injectSpeedSliders();
 
-// Inline hints
+// Inline hints 
 setupInlineHints('array-editor');
 setupInlineHints('linkedlist-editor');
 setupInlineHints('stack-editor');
 setupInlineHints('queue-editor');
 setupInlineHints('tree-editor');
+setupInlineHints('sorting-editor');
 
 // Keyboard shortcuts
 document.querySelectorAll('.code-editor').forEach(editor => {

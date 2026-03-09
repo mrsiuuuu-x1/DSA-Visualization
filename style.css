@@ -88,13 +88,8 @@ nav {
   cursor: pointer;
   transition: all .2s;
   letter-spacing: .03em;
-  position: relative;
 }
 .nav-btn:hover { border-color: var(--accent); color: var(--accent); }
-.nav-btn:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
 .nav-btn.active {
   background: var(--accent);
   border-color: var(--accent);
@@ -155,21 +150,6 @@ kbd {
 
 @media (max-width: 768px) {
   .viz-layout { grid-template-columns: 1fr; }
-  header {
-    height: auto;
-    padding: .5rem 1rem;
-    gap: .5rem;
-  }
-  nav {
-    order: 3;
-    flex-basis: 100%;
-    overflow-x: auto;
-    padding-bottom: .3rem;
-  }
-  .header-tag { display: none; }
-  .section { padding: 1.5rem 1rem 2rem; }
-  .controls { gap: .5rem; }
-  .ctrl-btn { padding: .45rem 1rem; font-size: .8rem; }
 }
 
 .panel-label {
@@ -318,8 +298,7 @@ kbd {
   border-radius: 8px;
   border: 1px dashed var(--border);
   position: relative;
-  overflow-x: auto;
-  overflow-y: auto;
+  overflow: hidden;
 }
 
 .callout {
@@ -366,11 +345,6 @@ kbd {
   font-size: 1.1rem;
   background: var(--surface2);
   transition: all .3s;
-}
-
-.arr-cell:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
 }
 
 .arr-cell.highlight {
@@ -548,11 +522,6 @@ kbd {
   letter-spacing: .03em;
 }
 
-.ctrl-btn:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-
 .ctrl-btn:not(.secondary) {
   background: var(--accent);
   color: #0a0a0f;
@@ -631,10 +600,6 @@ footer {
   background: var(--accent2);
   color: var(--bg);
 }
-.mode-toggle-btn:focus-visible {
-  outline: 2px solid var(--accent2);
-  outline-offset: 2px;
-}
 
 .interactive-mode.hidden { display: none; }
 
@@ -685,10 +650,6 @@ footer {
 .run-btn:hover { opacity: .85; }
 .run-btn:active { transform: scale(.97); }
 .run-btn:disabled { opacity: .4; cursor: not-allowed; }
-.run-btn:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
 
 .pyodide-status {
   font-family: var(--mono);
@@ -697,14 +658,6 @@ footer {
 }
 .pyodide-status.ready { color: var(--accent2); }
 .pyodide-status.error { color: #ff5a5a; }
-
-.kbd-hint {
-  font-family: var(--mono);
-  font-size: .62rem;
-  color: var(--text-dim);
-  margin-left: auto;
-  opacity: .7;
-}
 
 .panel-hint {
   font-family: var(--mono);
@@ -727,7 +680,66 @@ footer {
   font-family: var(--mono);
   font-size: .8rem;
 }
-/* Inline hint */
+/* Algo picker */
+.algo-picker {
+  display: flex;
+  gap: .5rem;
+  margin-bottom: 1.2rem;
+  padding: 0 var(--pad, 1.5rem);
+}
+.algo-btn {
+  font-family: var(--mono);
+  font-size: .78rem;
+  font-weight: 700;
+  padding: .4rem 1.1rem;
+  background: transparent;
+  border: 1.5px solid var(--border);
+  color: var(--text-dim);
+  border-radius: 6px;
+  cursor: pointer;
+  letter-spacing: .04em;
+  transition: border-color .15s, color .15s, background .15s;
+}
+.algo-btn:hover { border-color: var(--accent); color: var(--accent); }
+.algo-btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--bg);
+}
+
+/* Sort bar chart */
+.sort-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 5px;
+  height: 180px;
+  padding: 0 8px;
+  justify-content: center;
+}
+.sort-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.sort-bar {
+  width: 36px;
+  border-radius: 4px 4px 0 0;
+  transition: height .25s ease, background .2s;
+  min-height: 8px;
+}
+.sort-bar--default   { background: var(--surface2); border: 1.5px solid var(--border); }
+.sort-bar--comparing { background: rgba(232,255,90,.18); border: 1.5px solid var(--accent); }
+.sort-bar--swapping  { background: rgba(255,90,138,.22); border: 1.5px solid var(--accent3); }
+.sort-bar--sorted    { background: rgba(90,255,224,.15); border: 1.5px solid var(--accent2); }
+.sort-bar--key       { background: rgba(232,255,90,.35); border: 2px solid var(--accent); }
+.sort-label {
+  font-family: var(--mono);
+  font-size: .65rem;
+  color: var(--text-dim);
+}
+
+/* ── Inline hint */
 .inline-hint {
   font-family: var(--mono);
   font-size: .72rem;
@@ -739,6 +751,4 @@ footer {
   margin-top: .3rem;
   line-height: 1.5;
 }
-.inline-hint code, .inline-hint b {
-  color: #f1a000;
-}
+.inline-hint code, .inline-hint b { color: #f1a000; }
