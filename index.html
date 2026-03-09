@@ -477,6 +477,77 @@ Insert(20)
     </div>
   </section>
 
+  <!-- SORTING -->
+  <section id="sorting" class="section">
+    <div class="section-hero">
+      <h1>Sorting</h1>
+      <p class="subtitle">Compare <strong>Bubble Sort</strong> and <strong>Insertion Sort</strong> — watch elements get compared, swapped, and sorted step by step.</p>
+    </div>
+    <div class="mode-toggle-row">
+      <button class="mode-toggle-btn" id="sorting-mode-toggle">⚡ Interactive Mode</button>
+    </div>
+
+    <!-- Step Mode -->
+    <div id="sorting-step-mode">
+      <div style="display:flex;gap:.6rem;margin-bottom:1rem;">
+        <button class="ctrl-btn active" id="sort-bubble-btn">Bubble Sort</button>
+        <button class="ctrl-btn secondary" id="sort-insertion-btn">Insertion Sort</button>
+      </div>
+      <div class="viz-layout">
+        <div class="code-panel">
+          <div class="panel-label">Python Code</div>
+          <pre class="code-block" id="sorting-code"></pre>
+        </div>
+        <div class="diagram-panel">
+          <div class="panel-label">Visualization</div>
+          <div class="diagram-area" id="sorting-diagram"></div>
+          <div class="callout" id="sorting-callout">Press <strong>Step →</strong> to begin</div>
+        </div>
+      </div>
+      <div class="controls">
+        <button class="ctrl-btn secondary" id="sorting-reset">↺ Reset</button>
+        <button class="ctrl-btn" id="sorting-step">Step →</button>
+        <button class="ctrl-btn secondary" id="sorting-auto">▶ Auto</button>
+        <div class="step-counter">Step <span id="sorting-step-num">0</span> / <span id="sorting-step-total">0</span></div>
+      </div>
+    </div>
+
+    <!-- Interactive Mode -->
+    <div id="sorting-interactive-mode" class="interactive-mode hidden">
+      <div class="viz-layout">
+        <div class="code-panel">
+          <div class="panel-label">Your Python Code
+            <span class="panel-hint">Write any Python — add <code># @visualize varName</code> to watch a variable</span>
+          </div>
+          <textarea class="code-editor" id="sorting-editor" aria-label="Sorting code editor" title="Sorting code editor" spellcheck="false">arr = [64, 34, 25, 12, 22, 11, 90]
+
+def bubble_sort(a):
+    n = len(a)
+    for i in range(n):
+        for j in range(n - i - 1):
+            if a[j] > a[j + 1]:
+                a[j], a[j+1] = a[j+1], a[j]
+
+bubble_sort(arr)
+
+# @visualize arr</textarea>
+          <pre class="code-block interactive-code-view" id="sorting-interactive-code" style="display:none"></pre>
+          <div class="editor-controls">
+            <button class="run-btn" id="sorting-run">▶ Run</button>
+            <span class="pyodide-status" id="sorting-py-status">Loading Python...</span>
+          </div>
+        </div>
+        <div class="diagram-panel">
+          <div class="panel-label">Visualization</div>
+          <div class="diagram-area" id="sorting-interactive-diagram">
+            <span class="diagram-placeholder">Press Run to visualize</span>
+          </div>
+          <div class="callout" id="sorting-interactive-callout">Write your code and press <strong>Run</strong></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- SEARCH -->
   <section id="search" class="section">
     <div class="section-hero">
