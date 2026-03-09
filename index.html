@@ -27,6 +27,7 @@
     <button class="nav-btn" data-section="queues">Queue</button>
     <button class="nav-btn" data-section="trees">Binary Tree</button>
     <button class="nav-btn" data-section="sorting">Sorting</button>
+    <button class="nav-btn" data-section="search">Search</button>
   </nav>
   <div class="header-tag">Python · Visual · Interactive</div>
 </header>
@@ -476,73 +477,74 @@ Insert(20)
     </div>
   </section>
 
-  <!-- SORTING -->
-  <section id="sorting" class="section">
+  <!-- ═══════════════ SEARCH ═══════════════ -->
+  <section id="search" class="section">
     <div class="section-hero">
-      <h1>Sorting</h1>
-      <p class="subtitle">Watch <strong>Bubble Sort</strong> and <strong>Insertion Sort</strong> compare and swap elements — step by step.</p>
+      <h1>Search</h1>
+      <p class="subtitle">Watch <strong>Binary Search</strong> eliminate half the array each step — track the <strong>left</strong>, <strong>mid</strong>, and <strong>right</strong> pointers closing in on the target.</p>
     </div>
     <div class="mode-toggle-row">
-      <button class="mode-toggle-btn" id="sorting-mode-toggle">⚡ Interactive Mode</button>
+      <button class="mode-toggle-btn" id="search-mode-toggle">⚡ Interactive Mode</button>
     </div>
 
     <!-- Step Mode -->
-    <div id="sorting-step-mode">
-      <!-- Algorithm picker -->
-      <div class="algo-picker">
-        <button class="algo-btn active" id="sort-bubble-btn">Bubble Sort</button>
-        <button class="algo-btn" id="sort-insertion-btn">Insertion Sort</button>
-      </div>
+    <div id="search-step-mode">
       <div class="viz-layout">
         <div class="code-panel">
           <div class="panel-label">Python Code</div>
-          <pre class="code-block" id="sorting-code"></pre>
+          <pre class="code-block" id="search-code"></pre>
         </div>
         <div class="diagram-panel">
           <div class="panel-label">Visualization</div>
-          <div class="diagram-area" id="sorting-diagram"></div>
-          <div class="callout" id="sorting-callout">Press <strong>Step →</strong> to begin</div>
+          <div class="diagram-area" id="search-diagram"></div>
+          <div class="callout" id="search-callout">Press <strong>Step →</strong> to begin</div>
         </div>
       </div>
       <div class="controls">
-        <button class="ctrl-btn secondary" id="sorting-reset">↺ Reset</button>
-        <button class="ctrl-btn" id="sorting-step">Step →</button>
-        <button class="ctrl-btn secondary" id="sorting-auto">▶ Auto</button>
-        <div class="step-counter">Step <span id="sorting-step-num">0</span> / <span id="sorting-step-total">0</span></div>
+        <button class="ctrl-btn secondary" id="search-reset">↺ Reset</button>
+        <button class="ctrl-btn" id="search-step">Step →</button>
+        <button class="ctrl-btn secondary" id="search-auto">▶ Auto</button>
+        <div class="step-counter">Step <span id="search-step-num">0</span> / <span id="search-step-total">0</span></div>
       </div>
     </div>
 
     <!-- Interactive Mode -->
-    <div id="sorting-interactive-mode" class="interactive-mode hidden">
+    <div id="search-interactive-mode" class="interactive-mode hidden">
       <div class="viz-layout">
         <div class="code-panel">
           <div class="panel-label">Your Python Code
-            <span class="panel-hint">Write any Python — add <code># @visualize varName</code> to watch a list sort</span>
+            <span class="panel-hint">Write any Python — add <code># @visualize varName</code> to watch a list</span>
           </div>
-          <textarea class="code-editor" id="sorting-editor" aria-label="Sorting code editor" title="Sorting code editor" spellcheck="false">arr = [64, 34, 25, 12, 22, 11, 90]
+          <textarea class="code-editor" id="search-editor" aria-label="Search code editor" title="Search code editor" spellcheck="false">arr = [2, 5, 8, 12, 16, 23, 38, 56, 72, 91]
+target = 23
 
-def bubble_sort(a):
-    n = len(a)
-    for i in range(n):
-        for j in range(n - i - 1):
-            if a[j] > a[j + 1]:
-                a[j], a[j + 1] = a[j + 1], a[j]
+def binary_search(arr, target):
+    left, right = 0, len(arr) - 1
+    while left <= right:
+        mid = (left + right) // 2
+        if arr[mid] == target:
+            return mid
+        elif arr[mid] < target:
+            left = mid + 1
+        else:
+            right = mid - 1
+    return -1
 
-bubble_sort(arr)
+result = binary_search(arr, target)
 
 # @visualize arr</textarea>
-          <pre class="code-block interactive-code-view" id="sorting-interactive-code" style="display:none"></pre>
+          <pre class="code-block interactive-code-view" id="search-interactive-code" style="display:none"></pre>
           <div class="editor-controls">
-            <button class="run-btn" id="sorting-run">▶ Run</button>
-            <span class="pyodide-status" id="sorting-py-status">Loading Python...</span>
+            <button class="run-btn" id="search-run">▶ Run</button>
+            <span class="pyodide-status" id="search-py-status">Loading Python...</span>
           </div>
         </div>
         <div class="diagram-panel">
           <div class="panel-label">Visualization</div>
-          <div class="diagram-area" id="sorting-interactive-diagram">
+          <div class="diagram-area" id="search-interactive-diagram">
             <span class="diagram-placeholder">Press Run to visualize</span>
           </div>
-          <div class="callout" id="sorting-interactive-callout">Write your code and press <strong>Run</strong></div>
+          <div class="callout" id="search-interactive-callout">Write your code and press <strong>Run</strong></div>
         </div>
       </div>
     </div>
@@ -566,6 +568,7 @@ bubble_sort(arr)
   <script src="sections/queue.js"></script>
   <script src="sections/tree.js"></script>
   <script src="sections/sorting.js"></script>
+  <script src="sections/search.js"></script>
   <script src="main.js"></script>
 </body>
 </html>

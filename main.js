@@ -7,7 +7,7 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
   });
 });
 
-// Step - Interactive mode toggles
+// Step ↔ Interactive mode toggles
 function setupModeToggle(name) {
   const btn         = document.getElementById(`${name}-mode-toggle`);
   const stepDiv     = document.getElementById(`${name}-step-mode`);
@@ -31,6 +31,7 @@ setupModeToggle('stack');
 setupModeToggle('queue');
 setupModeToggle('tree');
 setupModeToggle('sorting');
+setupModeToggle('search');
 
 // Python status labels
 document.querySelectorAll('.pyodide-status').forEach(el => {
@@ -60,13 +61,14 @@ function injectSpeedSliders() {
 }
 injectSpeedSliders();
 
-// Inline hints 
+// Inline hints
 setupInlineHints('array-editor');
 setupInlineHints('linkedlist-editor');
 setupInlineHints('stack-editor');
 setupInlineHints('queue-editor');
 setupInlineHints('tree-editor');
 setupInlineHints('sorting-editor');
+setupInlineHints('search-editor');
 
 // Keyboard shortcuts
 document.querySelectorAll('.code-editor').forEach(editor => {
