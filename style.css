@@ -40,7 +40,7 @@ body {
   background-size: 200px;
 }
 
-/* ── Header ──────────────────────────────────── */
+/* Header */
 header {
   position: sticky;
   top: 0;
@@ -109,7 +109,7 @@ nav {
   letter-spacing: .05em;
 }
 
-/* ── Main ─────────────────────────────────────── */
+/* Main */
 main { position: relative; z-index: 1; flex: 1; }
 
 .section { display: none; padding: 2.5rem 2rem 3rem; max-width: 1200px; margin: 0 auto; }
@@ -145,7 +145,7 @@ kbd {
   color: var(--accent);
 }
 
-/* ── Layout ───────────────────────────────────── */
+/* Layout */
 .viz-layout {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -182,7 +182,7 @@ kbd {
   margin-bottom: .5rem;
 }
 
-/* ── Code Panel ───────────────────────────────── */
+/* Code Panel */
 .code-panel {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -243,7 +243,7 @@ kbd {
   color: var(--text-dim);
 }
 
-/* ── Speed slider ─────────────────────────────── */
+/* Speed slider */
 .speed-wrap {
   display: flex;
   align-items: center;
@@ -295,7 +295,7 @@ kbd {
 .num { color: #bd93f9; }
 .cmt { color: #44475a; font-style: italic; }
 
-/* ── Diagram Panel ────────────────────────────── */
+/* Diagram Panel */
 .diagram-panel {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -339,7 +339,7 @@ kbd {
   from { opacity: 0; } to { opacity: 1; }
 }
 
-/* ── Array / List boxes ───────────────────────── */
+/* Array / List boxes */
 .arr-box {
   display: flex;
   flex-direction: column;
@@ -386,7 +386,7 @@ kbd {
   color: var(--text-dim);
 }
 
-/* ── Linked List nodes ────────────────────────── */
+/* Linked List nodes */
 .ll-container {
   display: flex;
   align-items: center;
@@ -434,7 +434,7 @@ kbd {
   padding: 0 4px;
 }
 
-/* ── Stack / Queue items ──────────────────────── */
+/* Stack / Queue items */
 .stack-item {
   width: 160px;
   padding: 10px 16px;
@@ -487,7 +487,7 @@ kbd {
   color: var(--accent);
 }
 
-/* ── Tree SVG ─────────────────────────────────── */
+/* Tree SVG */
 #tree-svg { overflow: visible; }
 
 .tree-edge {
@@ -527,7 +527,7 @@ kbd {
   pointer-events: none;
 }
 
-/* ── Controls ─────────────────────────────────── */
+/* Controls */
 .controls {
   display: flex;
   align-items: center;
@@ -581,7 +581,7 @@ kbd {
   margin-left: auto;
 }
 
-/* ── Footer ───────────────────────────────────── */
+/* Footer */
 footer {
   position: relative;
   z-index: 1;
@@ -606,7 +606,7 @@ footer {
 }
 .gh-link:hover { color: var(--accent); }
 
-/* ── Interactive Mode ─────────────────────────── */
+/* Interactive Mode */
 .mode-toggle-row {
   display: flex;
   justify-content: flex-end;
@@ -727,7 +727,7 @@ footer {
   font-family: var(--mono);
   font-size: .8rem;
 }
-/* ── Inline hint ──────────────────────────────── */
+/* Inline hint */
 .inline-hint {
   font-family: var(--mono);
   font-size: .72rem;
