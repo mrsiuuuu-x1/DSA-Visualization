@@ -1,6 +1,6 @@
-# DSAVis — Data Structure Visualizer
+# DSAvis — Data Structure Visualizer
 
-An interactive, browser-based visualizer for learning data structures through **step-by-step code execution**, **live animated diagrams**, and **interactive Python mode** — all in the browser, no install required.
+I built this because most DSA resources are either too abstract or too dry. DSAvis lets you **watch Python code run line by line** while the data structure updates in real time — no setup, no install, just open and learn.
 
 ![Status](https://img.shields.io/badge/status-live-brightgreen) ![License](https://img.shields.io/badge/license-MIT-blue)
 
@@ -8,59 +8,46 @@ An interactive, browser-based visualizer for learning data structures through **
 
 ---
 
-## Data Structures Covered
+## What's inside
 
-| Section | Operations |
+| Section | What you'll see |
 | --- | --- |
-| **Array** | append, access by index, pop, insert |
-| **Linked List** | append, delete (mid-node and head) with pointer visualization |
-| **Stack** | push, pop — array-based with `TopOfStack` pointer |
-| **Queue** | enqueue, dequeue — array-based with `HeadPointer`, `TailPointer`, `NumberItems` |
-| **Binary Tree** | insert, traverse — array-based with private attributes, getters/setters, index pointers |
+| **Array** | append, pop, insert — watch indices shift in real time |
+| **Linked List** | node chaining, deletion with pointer re-linking visualized |
+| **Stack** | push and pop with a live `TopOfStack` pointer |
+| **Queue** | enqueue and dequeue with Head, Tail, and Count updating live |
+| **Binary Tree** | BST insertion with an array-based implementation — see the L/D/R table update as nodes are placed |
+| **Sorting** | Bubble Sort and Insertion Sort — bar chart that highlights comparisons, swaps, and sorted regions |
 
 ---
 
-## Features
+## Two ways to learn
 
 ### Step Mode
-- Walk through each line of Python code one step at a time
-- Live diagrams update as each operation executes
-- Plain-English callout explains what's happening at every step
-- Auto-play mode steps through automatically at a set interval
-- Speed slider — control animation speed from slow to fast in real time
-- Syntax-highlighted code with colour-coded keywords, functions, strings, and numbers
+Click **Step →** to move through the code one line at a time. Every step updates the diagram and shows a plain-English explanation of what just happened. Use **Auto** to let it play on its own, and the speed slider to go as slow or fast as you want.
 
 ### Interactive Mode
-- Write your own Python code and watch it animate live
-- Tag any variable with `# @visualize varName` to track it
-- Line-by-line code highlighting during playback
-- Record/pointer table — linked list shows `val` and `next` fields per node
-- **✎ Edit button** — return to the editor from the code view at any time
-- **Smart error messages** — plain-English explanations instead of raw Python errors
-- **Inline hints** — warning appears as you type if a class name is used in `@visualize` or an unsupported `import` is detected
+Write your own Python code, tag a variable with `# @visualize varName`, and hit **Run**. The visualizer will animate every change to that variable as your code executes — line by line, with the active line highlighted.
 
-### Diagrams
-- Linked list node chain with `val | next` cells and connecting arrows
-- Delete visualization — deleted node turns red, skip arrow shows pointer re-linking
-- Stack with `▲ TOP` label and `TopOfStack` counter
-- Queue with Front/Rear labels and Head/Tail/Count display
-- Binary tree SVG with index labels and L/D/R array table below
+A few things worth knowing:
+- If your code throws an error, you'll get a plain-English explanation instead of a raw Python traceback
+- If you accidentally tag a class name instead of a variable, a warning appears before you even run
+- `import` statements aren't supported — the visualizer runs Python in-browser via [Skulpt](https://skulpt.org/)
 
 ---
 
-## Interactive Mode — Usage Guide
+## Interactive Mode — quick examples
 
-Add `# @visualize varName` anywhere in your code to watch a variable animate.
-
-**Arrays and lists** — tag the list directly:
+**Simple list:**
 ```python
 arr = []
 arr.append(10)
 arr.append(20)
+arr.append(30)
 # @visualize arr
 ```
 
-**Linked lists** — add a `to_list()` method and reassign after each operation:
+**Linked list** — add a `to_list()` method and reassign after each operation:
 ```python
 ll = LinkedList()
 snapshot = ll.to_list()
@@ -74,7 +61,7 @@ snapshot = ll.to_list()
 # @visualize snapshot
 ```
 
-**Binary trees** — `snapshot()` must return `[[leftIdx, data, rightIdx], ...]` per node:
+**Binary tree** — `snapshot()` needs to return `[[leftIdx, data, rightIdx], ...]` per node:
 ```python
 def snapshot(self):
     return [[self.__Tree[i].GetLeft(), self.__Tree[i].GetData(), self.__Tree[i].GetRight()]
@@ -86,13 +73,11 @@ Tree = TheTree.snapshot()
 # @visualize Tree
 ```
 
-> **Note:** `import` statements are not supported — the visualizer runs Python in-browser via [Skulpt](https://skulpt.org/).
-
 ---
 
-## Getting Started
+## Running locally
 
-No install needed. Just open `index.html` in any modern browser.
+No build step, no dependencies — just clone and open.
 
 ```bash
 git clone https://github.com/mrsiuuuu-x1/DSA-Visualization.git
@@ -100,36 +85,42 @@ cd DSA-Visualization
 # open index.html in your browser
 ```
 
-Or visit the live site directly — no setup required.
-
 ---
 
-## File Structure
+## File structure
 
 ```
 DSA-Visualization/
-├── index.html    # HTML structure — 5 sections, one per data structure
-├── style.css     # Dark theme, animations, responsive layout
-├── app.js        # All visualizer logic, step definitions, diagram rendering
-├── favicon.svg   # Browser tab icon
+├── index.html
+├── style.css
+├── utils.js
+├── interactive.js
+├── sections/
+│   ├── array.js
+│   ├── linkedlist.js
+│   ├── stack.js
+│   ├── queue.js
+│   ├── tree.js
+│   └── sorting.js
+├── main.js
+├── favicon.svg
 └── README.md
 ```
 
 ---
 
-## Tech Stack
+## Tech stack
 
 - Vanilla HTML, CSS, JavaScript — zero dependencies, zero build step
-- [Skulpt](https://skulpt.org/) — in-browser Python interpreter for Interactive Mode
+- [Skulpt](https://skulpt.org/) — in-browser Python interpreter
 - SVG for Binary Tree rendering
 - Google Fonts: JetBrains Mono + Syne
-- Hosted via GitHub Pages
+- Hosted on GitHub Pages
 
 ---
 
-## Roadmap
+## What's coming
 
-- [ ] Sorting algorithms (Bubble Sort, Insertion Sort)
 - [ ] Hash Tables
 - [ ] Heap / Priority Queue
 - [ ] Light theme toggle
@@ -138,4 +129,4 @@ DSA-Visualization/
 
 ## License
 
-MIT — free to use, share, and modify.
+MIT — free to use, modify, and share.
