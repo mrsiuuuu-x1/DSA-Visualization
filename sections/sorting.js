@@ -230,18 +230,6 @@ function buildInsertionSteps() {
 let currentAlgo = 'bubble';
 let sortSteps = buildBubbleSteps();
 let sortState = {prevLine: null};
-let sortController = null;
-
-function initSortController() {
-    sortSteps = currentAlgo === 'bubble' ? buildBubbleSteps() : buildInsertionSteps();
-    sortState = { prevLine: null };
-    renderCode('sorting-code', currentAlgo === 'bubble' ? bubbleCode : insertionCode);
-    renderSortDiagram('sorting-diagram', plain([64, 34, 25, 12, 22, 11, 90]));
-    document.getElementById('sorting-callout').innerHTML = 'Press <strong>Step →</strong> to begin';
-    document.getElementById('sorting-step-num').textContent = 0;
-    document.getElementById('sorting-step-total').textContent = sortSteps.length;
-}
-
 const sortStepsProxy = {
     get length() {return sortSteps.length;}
 };
