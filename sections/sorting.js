@@ -232,13 +232,6 @@ let sortSteps = buildBubbleSteps();
 let sortState = {prevLine: null};
 let sortController = null;
 
-function resetSorting() {
-    sortState = {prevLine: null};
-    renderCode('sorting-code', currentAlgo === 'bubble' ? bubbleCode : insertionCode);
-    renderSortDiagram('sorting-diagrma', plain([64, 34, 25, 12, 22, 11, 90]));
-    document.getElementById('sorting-callout').innerHTML = 'Press <strong>Step -></strong> to begin';
-}
-
 function initSortController() {
     sortSteps = currentAlgo === 'bubble' ? buildBubbleSteps() : buildInsertionSteps();
     sortState = { prevLine: null };
@@ -248,24 +241,6 @@ function initSortController() {
     document.getElementById('sorting-step-num').textContent = 0;
     document.getElementById('sorting-step-total').textContent = sortSteps.length;
 }
-
-// Algorithm toggle buttons
-document.getElementById('sort-bubble-btn').addEventListener('click', () => {
-    if (currentAlgo === 'bubble') return;
-    currentAlgo = 'bubble';
-    document.getElementById('sort-bubble-btn').classList.add('active');
-    document.getElementById('sort-insertion-btn').classList.remove('active');
-    initSortController();
-});
-document.getElementById('sort-insertion-btn').addEventListener('click', () => {
-    if (currentAlgo === 'insertion') return;
-    currentAlgo = 'insertion';
-    document.getElementById('sort-insertion-btn').classList.add('active');
-    document.getElementById('sort-bubble-btn').classList.remove('active');
-    initSortController();
-});
-
-initSortController();
 
 const sortStepsProxy = {
     get length() {return sortSteps.length;}
@@ -290,12 +265,32 @@ makeController(
         sortSteps = currentAlgo === 'bubble' ? buildBubbleSteps() : buildInsertionSteps();
         renderCode('sorting-code', currentAlgo === 'bubble' ? bubbleCode : insertionCode);
         renderSortDiagram('sorting-diagram', plain([64, 34, 25, 12, 22, 11, 90]));
-        document.getElementById('sorting-callout').innerHTML = 'Press <strong>Step →</strong> to begin';
+        document.getElementById('sorting-callout').innerHTML = 'Press <strong>Step -></strong> to begin';
         document.getElementById('sorting-step-total').textContent = sortSteps.length;
     }
 );
 
+renderCode('sorting-code', bubbleCode);
+renderSortDiagram('sorting-diagram', plain([64, 34, 25, 12, 22, 11, 90]));
 document.getElementById('sorting-step-total').textContent = sortSteps.length;
+
+// Algo toggle btns
+document.getElementById('sort-bubble-btn').addEventListener('click', () => {
+    if (currentAlgo === 'bubble') return;
+    currentAlgo = 'bubble';
+    document.getElementById('sort-bubble-btn').classList.add('active');
+    document.getElementById('sort-insertion-btn').classList.remove('active');
+    sortSteps = buildBubbleSteps();
+    document.getElementById('sorting-reset').click();
+});
+document.getElementById('sort-insertion-btn').addEventListener('click', () => {
+    if (currentAlgo === 'insertion') return;
+    currentAlgo = 'insertion';
+    document.getElementById('sort-insertion-btn').classList.add('active');
+    document.getElementById('sort-bubble-btn').classList.remove('active');
+    sortSteps = buildInsertionSteps();
+    document.getElementById('sorting-reset').click();
+});
 
 // Interactive Mode
 function renderInteractiveSorting(diagramEl, snap) {
