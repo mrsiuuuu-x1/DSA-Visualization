@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>DSA Visualizer</title>
+  <meta name="description" content="Interactive DSA visualizer — step through arrays, linked lists, stacks, queues, trees, sorting and search algorithms with Python code. Write your own code in the Playground.">
+  <title>DSA Visualizer — Interactive Data Structures & Algorithms</title>
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <link rel="stylesheet" href="style.css" />
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
@@ -11,6 +12,9 @@
   <script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt-stdlib.js"></script>
 </head>
 <body>
+
+<!-- Improvement 8: Skip-nav for accessibility -->
+<a href="#main-content" class="skip-nav">Skip to content</a>
 
 <div class="noise"></div>
 
@@ -28,11 +32,12 @@
     <button class="nav-btn" data-section="trees">Binary Tree</button>
     <button class="nav-btn" data-section="sorting">Sorting</button>
     <button class="nav-btn" data-section="search">Search</button>
+    <button class="nav-btn" data-section="playground">🧪 Playground</button>
   </nav>
-  <div class="header-tag">Python · Visual · Interactive</div>
+  <div class="header-tag">Python · JS · C++ · Visual · Interactive</div>
 </header>
 
-<main>
+<main id="main-content" aria-live="polite">
 
   <!-- ARRAY -->
   <section id="arrays" class="section active">
@@ -253,7 +258,7 @@ TopOfStack = -1
 
 def Push(item):
     global Stack, TopOfStack
-    if TopOfStack > 29:
+    if TopOfStack >= 29:
         print("Stack is full")
         return False
     TopOfStack += 1
@@ -339,23 +344,28 @@ NumberItems = 0
 
 def EnQueue(val):
     global Queue, HeadPointer, TailPointer, NumberItems
+    if NumberItems == 100:
+        return False
     if NumberItems == 0:
         HeadPointer = 0
         TailPointer = 0
     else:
-        TailPointer += 1
+        TailPointer = (TailPointer + 1) % 100
     Queue[TailPointer] = val
     NumberItems += 1
+    return True
 
 def DeQueue():
     global Queue, HeadPointer, TailPointer, NumberItems
+    if NumberItems == 0:
+        return None
     item = Queue[HeadPointer]
     NumberItems -= 1
     if NumberItems == 0:
         HeadPointer = -1
         TailPointer = -1
     else:
-        HeadPointer += 1
+        HeadPointer = (HeadPointer + 1) % 100
     return item
 
 EnQueue(15)
@@ -621,6 +631,75 @@ result = binary_search(arr, target)
     </div>
   </section>
 
+    <!-- PLAYGROUND -->
+    <section id="playground" class="section">
+      <div class="section-hero">
+        <h1>🧪 Playground</h1>
+        <p class="subtitle">Write your own code in <strong>Python</strong>, <strong>JavaScript</strong>, <strong>C++</strong>, <strong>Java</strong>, or <strong>C</strong> — tag any variable with <code>// @visualize varName</code> and watch it come alive.</p>
+      </div>
+
+      <div class="playground-controls-row">
+        <div class="pg-select-group">
+          <label for="pg-lang" class="pg-label">Language</label>
+          <select id="pg-lang" class="pg-select" aria-label="Select programming language">
+            <option value="python" selected>Python</option>
+            <option value="javascript">JavaScript</option>
+            <option value="cpp">C++</option>
+            <option value="java">Java</option>
+            <option value="c">C</option>
+          </select>
+        </div>
+        <div class="pg-select-group">
+          <label for="pg-template" class="pg-label">Template</label>
+          <select id="pg-template" class="pg-select" aria-label="Select code template">
+            <option value="empty">Empty</option>
+            <option value="array" selected>Array</option>
+            <option value="linkedlist">Linked List</option>
+            <option value="stack">Stack</option>
+            <option value="queue">Queue</option>
+            <option value="tree">Binary Tree</option>
+            <option value="sorting">Sorting</option>
+            <option value="search">Binary Search</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="viz-layout playground-layout">
+        <div class="code-panel playground-code-panel">
+          <div class="panel-label">Your Code
+            <span class="panel-hint">Add <code>// @visualize varName</code> (or <code># @visualize</code> for Python) to watch a variable</span>
+          </div>
+          <textarea class="code-editor playground-editor" id="pg-editor" aria-label="Playground code editor" title="Playground code editor" spellcheck="false">arr = []
+
+arr.append(42)
+arr.append(17)
+arr.append(93)
+arr.append(5)
+arr.append(68)
+arr.pop()
+arr.insert(1, 55)
+
+# @visualize arr</textarea>
+          <pre class="code-block interactive-code-view" id="pg-code-view" style="display:none"></pre>
+          <div class="editor-controls">
+            <button class="run-btn playground-run" id="pg-run">▶ Run & Visualize</button>
+            <span class="pyodide-status" id="pg-status">✓ Ready</span>
+          </div>
+        </div>
+        <div class="diagram-panel">
+          <div class="panel-label">Visualization</div>
+          <div class="diagram-area playground-diagram" id="pg-diagram">
+            <span class="diagram-placeholder">Press Run to visualize</span>
+          </div>
+          <div class="callout" id="pg-callout">Write your code, pick a language, and press <strong>Run & Visualize</strong></div>
+          <div class="pg-console-wrap">
+            <div class="panel-label" style="margin-top:.8rem">Console Output</div>
+            <pre class="pg-console" id="pg-console"></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
 </main>
 
 <footer>
@@ -640,6 +719,7 @@ result = binary_search(arr, target)
   <script src="sections/tree.js"></script>
   <script src="sections/sorting.js"></script>
   <script src="sections/search.js"></script>
+  <script src="sections/playground.js"></script>
   <script src="main.js"></script>
 </body>
 </html>

@@ -33,9 +33,13 @@ setupModeToggle('tree');
 setupModeToggle('sorting');
 setupModeToggle('search');
 
-// Python status labels
+// Status labels
 document.querySelectorAll('.pyodide-status').forEach(el => {
-  el.textContent = '✓ Python ready';
+  if (el.id === 'pg-status') {
+    el.textContent = '✓ Ready';
+  } else {
+    el.textContent = '✓ Python ready';
+  }
   el.classList.add('ready');
 });
 

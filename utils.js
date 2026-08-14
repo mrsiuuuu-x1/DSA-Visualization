@@ -1,32 +1,59 @@
 let stepDelay = 900;
 
 function syntaxHL(raw) {
+  // Bug 3 fix: extract strings FIRST, before detecting # comments
+  // This prevents # inside strings from being treated as comments
+  const strings = [];
+  let preprocessed = raw;
+
+  // Extract single-quoted strings
+  preprocessed = preprocessed.replace(/'([^']*)'/g, (_, inner) => {
+    strings.push(`'${inner}'`);
+    return `\x00S${strings.length - 1}\x00`;
+  });
+  // Extract double-quoted strings
+  preprocessed = preprocessed.replace(/"([^"]*)"/g, (_, inner) => {
+    strings.push(`"${inner}"`);
+    return `\x00S${strings.length - 1}\x00`;
+  });
+
+  // Now detect comments on the preprocessed line (strings replaced with placeholders)
   let comment = '';
-  let code = raw;
-  const commentIdx = raw.indexOf('#');
+  let code = preprocessed;
+  const commentIdx = preprocessed.indexOf('#');
   if (commentIdx !== -1) {
-    comment = raw.slice(commentIdx);
-    code = raw.slice(0, commentIdx).trimEnd();
+    comment = preprocessed.slice(commentIdx);
+    code = preprocessed.slice(0, commentIdx).trimEnd();
   }
+
+  // HTML-escape the code part
   let s = code
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
-  const strings = [];
-  s = s.replace(/'([^']*)'/g, (_, inner) => {
-    strings.push(`<span class="str">'${inner}'</span>`);
-    return `\x00S${strings.length - 1}\x00`;
+
+  // Now wrap string placeholders with styled spans
+  // We need to restore the original strings and apply highlighting
+  s = s.replace(/\x00S(\d+)\x00/g, (_, idx) => {
+    const original = strings[idx]
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+    return `<span class="str">${original}</span>`;
   });
-  s = s.replace(/"([^"]*)"/g, (_, inner) => {
-    strings.push(`<span class="str">"${inner}"</span>`);
-    return `\x00S${strings.length - 1}\x00`;
-  });
-  s = s.replace(/\b(def|class|return|if|else|elif|for|while|in|not|and|or|None|True|False|import|from|pass|self|break)\b/g, '<span class="kw">$1</span>');
+
+  // Keywords
+  s = s.replace(/\b(def|class|return|if|else|elif|for|while|in|not|and|or|None|True|False|import|from|pass|self|break|continue|global|try|except|finally|raise|with|as|lambda|yield)\b/g, '<span class="kw">$1</span>');
+  // Function calls
   s = s.replace(/\b([A-Za-z_][A-Za-z0-9_]*)\s*(?=\()/g, '<span class="fn">$1</span>');
+  // Numbers
   s = s.replace(/(^|[\s,=\[(<>!])(-?\d+)(?=[\s,\])<>!;+\-*\/]|$)/g, '$1<span class="num">$2</span>');
-  s = s.replace(/\x00S(\d+)\x00/g, (_, idx) => strings[idx]);
+
+  // Restore comment (also restore any strings inside the comment for display)
   if (comment) {
-    const escaped = comment.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    let commentDisplay = comment;
+    commentDisplay = commentDisplay.replace(/\x00S(\d+)\x00/g, (_, idx) => strings[idx]);
+    const escaped = commentDisplay.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     s += (s ? ' ' : '') + `<span class="cmt">${escaped}</span>`;
   }
   return s;
@@ -65,27 +92,38 @@ function makeController(stepBtn, resetBtn, autoBtn, stepNumEl, stepTotalEl, step
       stepNumEl.textContent = current;
     }
     if (current >= steps.length && autoTimer) {
-      clearInterval(autoTimer);
+      clearTimeout(autoTimer);
       autoTimer = null;
       autoBtn.textContent = '▶ Auto';
     }
+  }
+
+  // Improvement 5: Use recursive setTimeout instead of setInterval
+  // so speed slider changes take effect immediately during auto-play
+  function scheduleNext() {
+    autoTimer = setTimeout(() => {
+      next();
+      if (autoTimer !== null && current < steps.length) {
+        scheduleNext();
+      }
+    }, stepDelay);
   }
 
   stepBtn.addEventListener('click', next);
 
   autoBtn.addEventListener('click', () => {
     if (autoTimer) {
-      clearInterval(autoTimer);
+      clearTimeout(autoTimer);
       autoTimer = null;
       autoBtn.textContent = '▶ Auto';
     } else {
       autoBtn.textContent = '⏸ Pause';
-      autoTimer = setInterval(next, stepDelay);
+      scheduleNext();
     }
   });
 
   resetBtn.addEventListener('click', () => {
-    if (autoTimer) { clearInterval(autoTimer); autoTimer = null; autoBtn.textContent = '▶ Auto'; }
+    if (autoTimer) { clearTimeout(autoTimer); autoTimer = null; autoBtn.textContent = '▶ Auto'; }
     current = 0;
     stepNumEl.textContent = 0;
     doReset();

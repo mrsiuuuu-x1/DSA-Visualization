@@ -221,7 +221,7 @@ document.getElementById('search-run').addEventListener('click', function () {
         document.getElementById('search-interactive-diagram'),
         document.getElementById('search-interactive-callout'),
         document.getElementById('search-py-status'),
-        renderInteractiveArray, this,
+        renderInteractiveSearch, this,
         'search-interactive-code', 'search-editor'
     );
 });

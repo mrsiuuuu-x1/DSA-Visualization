@@ -1,14 +1,13 @@
+// ── Smart error messages ──────────────────────────────────────
 function smartErrorMsg(rawError, varName, userCode) {
   const e = rawError.toString();
-  if (varName && /^[A-Z]/.test(varName))
-    return `<b>${varName}</b> looks like a class name, not a variable. Tag a variable instead — e.g. add a <code>snapshot()</code> method and use <code># @visualize snapshot</code>.`;
+  // Bug 4 fix: removed the false-positive class name check
+  // Capitalized variable names like Stack, Queue, Tree are perfectly valid
   if (/import/.test(userCode))
     return `Skulpt (the in-browser Python engine) doesn't support most <code>import</code> statements. Remove the import and use plain Python instead.`;
   const nameMatch = e.match(/NameError.*name '(\w+)'/);
   if (nameMatch) {
     const n = nameMatch[1];
-    if (/^[A-Z]/.test(n))
-      return `<b>${n}</b> is a class, not a variable — you can't visualize it directly. Add a <code>snapshot()</code> or <code>to_list()</code> method and tag that instead.`;
     return `Variable <b>${n}</b> not found. Make sure the name in <code># @visualize ${n}</code> matches exactly.`;
   }
   const attrMatch = e.match(/AttributeError.*'(\w+)'/);
@@ -18,6 +17,11 @@ function smartErrorMsg(rawError, varName, userCode) {
   if (/TypeError/.test(e)) return `Type error — you may be passing the wrong type of value to a function.`;
   const cleaned = e.replace(/^.*?Error/, m => `<b>${m}</b>`).split('\n')[0];
   return cleaned || e;
+}
+
+// ── HTML escape helper (Improvement 1: XSS prevention) ───────
+function escapeHTML(str) {
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
 // ── Inline hint watcher ───────────────────────────────────────
@@ -30,23 +34,22 @@ function setupInlineHints(editorId) {
   editor.parentElement.insertBefore(hint, editor.nextSibling);
   editor.addEventListener('input', () => {
     const code = editor.value;
-    const vizMatch = code.match(/#\s*@visualize\s+(\w+)/);
     if (/^\s*import\s/m.test(code)) {
       hint.style.display = '';
       hint.innerHTML = `⚠ <code>import</code> statements aren't supported — remove them before running.`;
       return;
     }
-    if (vizMatch && /^[A-Z]/.test(vizMatch[1])) {
-      hint.style.display = '';
-      hint.innerHTML = `⚠ <b>${vizMatch[1]}</b> looks like a class name — visualize a variable instead (e.g. a <code>snapshot()</code> list).`;
-      return;
-    }
+    // Bug 4 fix: removed false-positive class name warning
     hint.style.display = 'none';
   });
 }
 
 // ── Skulpt runner ─────────────────────────────────────────────
 function runSkulpt(code) {
+  // Improvement 7: Guard against Skulpt not loaded
+  if (typeof Sk === 'undefined') {
+    return Promise.reject(new Error('Python engine (Skulpt) not loaded. Check your internet connection and refresh.'));
+  }
   return new Promise((resolve, reject) => {
     let output = '';
     Sk.configure({
@@ -63,8 +66,22 @@ function runSkulpt(code) {
   });
 }
 
+// ── Bug 6: Track active animation timers so they can be cancelled ──
+const _activeAnimations = {};
+
+function cancelAnimation(key) {
+  if (_activeAnimations[key]) {
+    clearTimeout(_activeAnimations[key]);
+    _activeAnimations[key] = null;
+  }
+}
+
 // ── Main visualize runner ─────────────────────────────────────
 async function runVisualize(userCode, diagramEl, calloutEl, statusEl, renderFn, runBtn, codeViewId, editorId) {
+  // Bug 6: Cancel any existing animation on this diagram
+  const animKey = diagramEl.id || 'default';
+  cancelAnimation(animKey);
+
   if (runBtn) runBtn.disabled = true;
 
   // Clear any inline hint
@@ -108,6 +125,9 @@ async function runVisualize(userCode, diagramEl, calloutEl, statusEl, renderFn, 
   out.push('        return chr(34) + s + chr(34)');
   out.push('    if isinstance(obj, list):');
   out.push('        return "[" + ", ".join([_dumps(v) for v in obj]) + "]"');
+  // Improvement 9: handle tuples
+  out.push('    if isinstance(obj, tuple):');
+  out.push('        return "[" + ", ".join([_dumps(v) for v in obj]) + "]"');
   out.push('    if isinstance(obj, dict):');
   out.push('        items = []');
   out.push('        for k in obj:');
@@ -116,6 +136,9 @@ async function runVisualize(userCode, diagramEl, calloutEl, statusEl, renderFn, 
   out.push('    return _dumps(str(obj))');
   out.push('def _deepcopy(obj):');
   out.push('    if isinstance(obj, list):');
+  out.push('        return [_deepcopy(x) for x in obj]');
+  // Improvement 9: handle tuples in deepcopy
+  out.push('    if isinstance(obj, tuple):');
   out.push('        return [_deepcopy(x) for x in obj]');
   out.push('    if isinstance(obj, dict):');
   out.push('        r = {}');
@@ -167,7 +190,7 @@ async function runVisualize(userCode, diagramEl, calloutEl, statusEl, renderFn, 
     }
 
     if (steps.length === 0) {
-      calloutEl.innerHTML = `<span style="color:#ff5a5a">No changes on <code>${varName}</code>. Check the variable name matches exactly.</span>`;
+      calloutEl.innerHTML = `<span style="color:#ff5a5a">No changes on <code>${escapeHTML(varName)}</code>. Check the variable name matches exactly.</span>`;
       statusEl.textContent = '✓ Python ready';
       statusEl.classList.add('ready');
       if (runBtn) runBtn.disabled = false;
@@ -188,22 +211,25 @@ async function runVisualize(userCode, diagramEl, calloutEl, statusEl, renderFn, 
     let playPrevLine = null;
     function play() {
       if (i >= steps.length) {
+        _activeAnimations[animKey] = null;
         const lastSnap = steps[steps.length - 1].snap;
         const count = Array.isArray(lastSnap[0])
           ? lastSnap.filter(v => Array.isArray(v) && !(v[0] === -1 && v[1] === -1 && v[2] === -1)).length
           : lastSnap.filter(v => v !== -1 && v !== '' && v !== null).length;
-        calloutEl.innerHTML = `✅ Done — <strong>${varName}</strong> has ${count} item(s)`;
+        calloutEl.innerHTML = `✅ Done — <strong>${escapeHTML(varName)}</strong> has ${count} item(s)`;
         return;
       }
       const { snap, label, line } = steps[i];
       renderFn(diagramEl, snap, varName);
-      calloutEl.innerHTML = `<code>${label}</code>`;
+      // Improvement 1: XSS - escape label before injecting
+      calloutEl.innerHTML = `<code>${escapeHTML(label)}</code>`;
       if (codeViewEl && line >= 0) {
         highlightLine(codeViewId, line, playPrevLine);
         playPrevLine = line;
       }
       i++;
-      setTimeout(play, stepDelay);
+      // Bug 6: save timer handle so it can be cancelled
+      _activeAnimations[animKey] = setTimeout(play, stepDelay);
     }
     play();
 
@@ -231,7 +257,7 @@ function renderInteractiveArray(diagramEl, snap) {
   filled.forEach((val, i) => {
     const box = document.createElement('div');
     box.className = 'arr-box';
-    box.innerHTML = `<div class="arr-cell">${val}</div><div class="arr-idx">[${i}]</div>`;
+    box.innerHTML = `<div class="arr-cell">${escapeHTML(String(val))}</div><div class="arr-idx">[${i}]</div>`;
     row.appendChild(box);
   });
   diagramEl.appendChild(row);
@@ -260,7 +286,7 @@ function renderInteractiveStack(diagramEl, snap, varName) {
   }
   const right = document.createElement('div');
   right.style.cssText = 'font-family:var(--mono);font-size:.72rem;display:flex;flex-direction:column;gap:4px;';
-  right.innerHTML = `<div style="color:var(--text-dim)">${varName}</div><div style="color:var(--accent);font-size:1rem;font-weight:700;">${filled.length} item(s)</div>`;
+  right.innerHTML = `<div style="color:var(--text-dim)">${escapeHTML(varName)}</div><div style="color:var(--accent);font-size:1rem;font-weight:700;">${filled.length} item(s)</div>`;
   wrap.appendChild(left);
   wrap.appendChild(right);
   diagramEl.appendChild(wrap);
@@ -287,7 +313,7 @@ function renderInteractiveQueue(diagramEl, snap, varName) {
   if (filled.length > 0) {
     const info = document.createElement('div');
     info.style.cssText = 'display:flex;gap:1.5rem;margin-top:.6rem;font-family:var(--mono);font-size:.72rem;justify-content:center;';
-    info.innerHTML = `<span style="color:var(--accent2)">Front: <strong>${filled[0]}</strong></span><span style="color:var(--accent)">Rear: <strong>${filled[filled.length-1]}</strong></span><span style="color:var(--text-dim)">Count: <strong>${filled.length}</strong></span>`;
+    info.innerHTML = `<span style="color:var(--accent2)">Front: <strong>${escapeHTML(String(filled[0]))}</strong></span><span style="color:var(--accent)">Rear: <strong>${escapeHTML(String(filled[filled.length-1]))}</strong></span><span style="color:var(--text-dim)">Count: <strong>${filled.length}</strong></span>`;
     diagramEl.appendChild(info);
   }
 }
@@ -307,13 +333,24 @@ function renderInteractiveLinkedList(diagramEl, snap) {
     const isLast = i === filled.length - 1;
     node.innerHTML = `
       <div class="ll-cell">
-        <div class="ll-val">${val}</div>
+        <div class="ll-val">${escapeHTML(String(val))}</div>
         <div class="ll-ptr">${isLast ? 'None' : '→'}</div>
       </div>
       ${!isLast ? '<div class="ll-arrow">→</div>' : ''}`;
     cont.appendChild(node);
   });
   diagramEl.appendChild(cont);
+}
+
+// Improvement 10: Helper to calculate max tree depth for dynamic SVG height
+function getTreeDepth(treeArr, idx, visited) {
+  if (idx < 0 || idx >= treeArr.length || !treeArr[idx]) return 0;
+  if (visited && visited.has(idx)) return 0;
+  if (visited) visited.add(idx);
+  const node = treeArr[idx];
+  const leftDepth = node.left !== -1 ? getTreeDepth(treeArr, node.left, visited) : 0;
+  const rightDepth = node.right !== -1 ? getTreeDepth(treeArr, node.right, visited) : 0;
+  return 1 + Math.max(leftDepth, rightDepth);
 }
 
 function renderInteractiveTree(diagramEl, snap, varName) {
@@ -336,7 +373,10 @@ function renderInteractiveTree(diagramEl, snap, varName) {
   const svgNS = 'http://www.w3.org/2000/svg';
   const svg = document.createElementNS(svgNS, 'svg');
   svg.setAttribute('width', '100%');
-  svg.setAttribute('height', '300');
+  // Improvement 10: Dynamic SVG height based on tree depth
+  const depth = getTreeDepth(treeArr, 0, new Set());
+  const svgHeight = Math.max(200, 40 + depth * 72 + 30);
+  svg.setAttribute('height', svgHeight);
   svg.style.overflow = 'visible';
 
   const W = diagramEl.clientWidth || 480;
@@ -400,4 +440,55 @@ function renderInteractiveTree(diagramEl, snap, varName) {
     + treeArr.map(n => `<div style="width:44px;text-align:center;padding:3px 0;background:var(--surface2);border-radius:4px;border:1px solid var(--border);color:var(--text-dim)">${n.right}</div>`).join('');
   table.appendChild(rightRow);
   diagramEl.appendChild(table);
+}
+
+// ── Improvement 6: Search-specific interactive renderer ───────
+function renderInteractiveSearch(diagramEl, snap) {
+  diagramEl.innerHTML = '';
+  const filled = snap.filter(v => v !== null && v !== '');
+  if (filled.length === 0) {
+    diagramEl.innerHTML = '<span class="diagram-placeholder">[ empty ]</span>';
+    return;
+  }
+  const wrap = document.createElement('div');
+  wrap.className = 'search-bars';
+  filled.forEach((val, idx) => {
+    const col = document.createElement('div');
+    col.className = 'search-col';
+    const box = document.createElement('div');
+    box.className = 'search-box search-box--default';
+    box.textContent = val;
+    const ptr = document.createElement('div');
+    ptr.className = 'search-ptr';
+    ptr.innerHTML = `<span class="search-ptr-label">[${idx}]</span>`;
+    col.appendChild(ptr);
+    col.appendChild(box);
+    wrap.appendChild(col);
+  });
+  diagramEl.appendChild(wrap);
+}
+
+// ── Auto-detect renderer for Playground ──────────────────────
+function autoDetectRenderer(snap) {
+  if (!Array.isArray(snap) || snap.length === 0) return renderInteractiveArray;
+
+  // Check if it's a tree: array of [left, data, right] sub-arrays
+  if (Array.isArray(snap[0]) && snap[0].length === 3) {
+    const looksLikeTree = snap.some(item =>
+      Array.isArray(item) && item.length === 3 &&
+      typeof item[1] !== 'undefined' &&
+      !(item[0] === -1 && item[1] === -1 && item[2] === -1)
+    );
+    if (looksLikeTree) return renderInteractiveTree;
+  }
+
+  // Check if all elements are numbers (sorting/search visualization)
+  const filled = snap.filter(v => v !== null && v !== '' && v !== -1);
+  const allNumbers = filled.length > 0 && filled.every(v => typeof v === 'number');
+
+  if (allNumbers && filled.length > 3) {
+    return renderInteractiveArray;
+  }
+
+  return renderInteractiveArray;
 }
