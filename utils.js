@@ -1,8 +1,6 @@
 let stepDelay = 900;
 
 function syntaxHL(raw) {
-  // Bug 3 fix: extract strings FIRST, before detecting # comments
-  // This prevents # inside strings from being treated as comments
   const strings = [];
   let preprocessed = raw;
 
@@ -98,8 +96,6 @@ function makeController(stepBtn, resetBtn, autoBtn, stepNumEl, stepTotalEl, step
     }
   }
 
-  // Improvement 5: Use recursive setTimeout instead of setInterval
-  // so speed slider changes take effect immediately during auto-play
   function scheduleNext() {
     autoTimer = setTimeout(() => {
       next();

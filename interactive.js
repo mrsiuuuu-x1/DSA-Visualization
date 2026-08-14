@@ -1,8 +1,6 @@
 // ── Smart error messages ──────────────────────────────────────
 function smartErrorMsg(rawError, varName, userCode) {
   const e = rawError.toString();
-  // Bug 4 fix: removed the false-positive class name check
-  // Capitalized variable names like Stack, Queue, Tree are perfectly valid
   if (/import/.test(userCode))
     return `Skulpt (the in-browser Python engine) doesn't support most <code>import</code> statements. Remove the import and use plain Python instead.`;
   const nameMatch = e.match(/NameError.*name '(\w+)'/);
@@ -19,7 +17,7 @@ function smartErrorMsg(rawError, varName, userCode) {
   return cleaned || e;
 }
 
-// ── HTML escape helper (Improvement 1: XSS prevention) ───────
+// ── HTML escape helper ───────
 function escapeHTML(str) {
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
@@ -39,14 +37,12 @@ function setupInlineHints(editorId) {
       hint.innerHTML = `⚠ <code>import</code> statements aren't supported — remove them before running.`;
       return;
     }
-    // Bug 4 fix: removed false-positive class name warning
     hint.style.display = 'none';
   });
 }
 
 // ── Skulpt runner ─────────────────────────────────────────────
 function runSkulpt(code) {
-  // Improvement 7: Guard against Skulpt not loaded
   if (typeof Sk === 'undefined') {
     return Promise.reject(new Error('Python engine (Skulpt) not loaded. Check your internet connection and refresh.'));
   }
@@ -66,7 +62,6 @@ function runSkulpt(code) {
   });
 }
 
-// ── Bug 6: Track active animation timers so they can be cancelled ──
 const _activeAnimations = {};
 
 function cancelAnimation(key) {
@@ -78,7 +73,6 @@ function cancelAnimation(key) {
 
 // ── Main visualize runner ─────────────────────────────────────
 async function runVisualize(userCode, diagramEl, calloutEl, statusEl, renderFn, runBtn, codeViewId, editorId) {
-  // Bug 6: Cancel any existing animation on this diagram
   const animKey = diagramEl.id || 'default';
   cancelAnimation(animKey);
 
@@ -125,7 +119,6 @@ async function runVisualize(userCode, diagramEl, calloutEl, statusEl, renderFn, 
   out.push('        return chr(34) + s + chr(34)');
   out.push('    if isinstance(obj, list):');
   out.push('        return "[" + ", ".join([_dumps(v) for v in obj]) + "]"');
-  // Improvement 9: handle tuples
   out.push('    if isinstance(obj, tuple):');
   out.push('        return "[" + ", ".join([_dumps(v) for v in obj]) + "]"');
   out.push('    if isinstance(obj, dict):');
@@ -137,7 +130,6 @@ async function runVisualize(userCode, diagramEl, calloutEl, statusEl, renderFn, 
   out.push('def _deepcopy(obj):');
   out.push('    if isinstance(obj, list):');
   out.push('        return [_deepcopy(x) for x in obj]');
-  // Improvement 9: handle tuples in deepcopy
   out.push('    if isinstance(obj, tuple):');
   out.push('        return [_deepcopy(x) for x in obj]');
   out.push('    if isinstance(obj, dict):');
@@ -221,14 +213,12 @@ async function runVisualize(userCode, diagramEl, calloutEl, statusEl, renderFn, 
       }
       const { snap, label, line } = steps[i];
       renderFn(diagramEl, snap, varName);
-      // Improvement 1: XSS - escape label before injecting
       calloutEl.innerHTML = `<code>${escapeHTML(label)}</code>`;
       if (codeViewEl && line >= 0) {
         highlightLine(codeViewId, line, playPrevLine);
         playPrevLine = line;
       }
       i++;
-      // Bug 6: save timer handle so it can be cancelled
       _activeAnimations[animKey] = setTimeout(play, stepDelay);
     }
     play();
@@ -342,7 +332,6 @@ function renderInteractiveLinkedList(diagramEl, snap) {
   diagramEl.appendChild(cont);
 }
 
-// Improvement 10: Helper to calculate max tree depth for dynamic SVG height
 function getTreeDepth(treeArr, idx, visited) {
   if (idx < 0 || idx >= treeArr.length || !treeArr[idx]) return 0;
   if (visited && visited.has(idx)) return 0;
@@ -373,7 +362,6 @@ function renderInteractiveTree(diagramEl, snap, varName) {
   const svgNS = 'http://www.w3.org/2000/svg';
   const svg = document.createElementNS(svgNS, 'svg');
   svg.setAttribute('width', '100%');
-  // Improvement 10: Dynamic SVG height based on tree depth
   const depth = getTreeDepth(treeArr, 0, new Set());
   const svgHeight = Math.max(200, 40 + depth * 72 + 30);
   svg.setAttribute('height', svgHeight);
@@ -442,7 +430,7 @@ function renderInteractiveTree(diagramEl, snap, varName) {
   diagramEl.appendChild(table);
 }
 
-// ── Improvement 6: Search-specific interactive renderer ───────
+// ── Search-specific interactive renderer ───────
 function renderInteractiveSearch(diagramEl, snap) {
   diagramEl.innerHTML = '';
   const filled = snap.filter(v => v !== null && v !== '');

@@ -834,7 +834,7 @@ footer {
   margin-left: auto;
 }
 
-/* ── Accessibility (Improvement 8) ────────────────────────── */
+/* ── Accessibility ────────────────────────── */
 .skip-nav {
   position: absolute;
   top: -100%;

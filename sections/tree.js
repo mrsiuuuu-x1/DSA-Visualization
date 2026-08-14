@@ -95,7 +95,7 @@ function renderBTDiagram(treeArr, highlightIdx = -1) {
   treeSVG.innerHTML = '';
   if (treeArr.length === 0) return;
 
-  // Improvement 10: Dynamic SVG height based on tree depth
+  // Dynamic SVG height based on tree depth
   const depth = getTreeDepth(treeArr, 0, new Set());
   treeSVG.setAttribute('height', Math.max(240, 40 + depth * 72 + 30));
 
